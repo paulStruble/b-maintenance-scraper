@@ -4,3 +4,5 @@ from Scraper import *
 
 scraper = Scraper()
 scraper.login_calnet()
+scraper.scrape_request(220149)
+input()
