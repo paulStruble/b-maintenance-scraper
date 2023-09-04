@@ -1,3 +1,6 @@
 # an independent driver class solely for testing and debugging purposes
 
-class TestDriver:
+from Scraper import *
+
+scraper = Scraper()
+scraper.login_calnet()
