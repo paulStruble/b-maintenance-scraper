@@ -21,4 +21,4 @@ class Scraper:
 
     # TODO: scrapes a work order request with the number [request_number]
     def scrape_request(self, request_number):
-        return None
+        WebAutomation.select_request_button(self.driver)
