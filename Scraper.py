@@ -10,7 +10,9 @@ from User import *
 class Scraper:
     def __init__(self):
         self.current_user = None
+
         self.driver = webdriver.Chrome()
+        self.driver.set_window_size(1905, 1025) #TODO: set window size relative to monitor resolution
 
     # prompts user for calnet login
     def login_calnet(self):
