@@ -28,6 +28,7 @@ class WebAutomation:
     # selects "Work Request" from the maintenance tracking dropdown menu
     @staticmethod
     def select_request_button(driver):
-        dropdown = driver.find_element(By.CSS_SELECTOR, "[name='Search']")
-        #dropdown_select = Select(driver.find_element(By.XPATH, "//select[@name='Search']"))  # TODO
-        #dropdown_select.select_by_value("WR")
+        driver.switch_to.frame(1)
+
+        dropdown_select = Select(driver.find_element(By.XPATH, "//select[@name='Search']"))
+        dropdown_select.select_by_value("WR")
