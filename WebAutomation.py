@@ -32,3 +32,8 @@ class WebAutomation:
 
         dropdown_select = Select(driver.find_element(By.XPATH, "//select[@name='Search']"))
         dropdown_select.select_by_value("WR")
+
+    # searches for a work order request by request number
+    @staticmethod
+    def search_request(driver, request_number: int):
+        #TODO: implement search_request
