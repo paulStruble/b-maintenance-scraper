@@ -18,7 +18,7 @@ class WebAutomation:
         driver.find_element(By.ID, "password").send_keys(user.password)
 
         # click signin button
-        driver.find_element(By. ID, "submit").click()
+        driver.find_element(By.ID, "submit").click()
 
         # wait for DUO Mobile confirmation
         print('---CONFIRM LOGIN ON DUO MOBILE---')
@@ -28,12 +28,17 @@ class WebAutomation:
     # selects "Work Request" from the maintenance tracking dropdown menu
     @staticmethod
     def select_request_button(driver):
-        driver.switch_to.frame(1)
+        # wait for sidebar to load #TODO: move into login_calnet if redundant
+        try:
+            WebDriverWait(driver, 10).until(EC.frame_to_be_available_and_switch_to_it((By.NAME, "botleft")))
+        except:
+            print("frame 'botleft' could not be found or switched to")
 
+        # select "Work Request"
         dropdown_select = Select(driver.find_element(By.XPATH, "//select[@name='Search']"))
         dropdown_select.select_by_value("WR")
 
     # searches for a work order request by request number
     @staticmethod
     def search_request(driver, request_number: int):
-        #TODO: implement search_request
+        return None #TODO: implement
