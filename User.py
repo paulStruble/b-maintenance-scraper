@@ -1,4 +1,5 @@
 # a user with attached login info
+import getpass
 
 
 class User:
@@ -9,8 +10,6 @@ class User:
     # prompts the user for login credentials and returns a new User object with the same credentials
     @staticmethod
     def login_prompt():
-        print('Username:', end=" ")
-        new_username = input()
-        print('Password:', end=" ")
-        new_password = input()
+        new_username = input("Username: ")
+        new_password = getpass.getpass("Password: ")
         return User(new_username, new_password)
