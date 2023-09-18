@@ -1,12 +1,15 @@
 # contains useful functions for Chrome automation using Selenium
-
+from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 
+from WORequest import WORequest
+
 
 class WebAutomation:
+
     # logs in to CalNet with the given [driver] as [user]
     @staticmethod
     def login_calnet(driver, user):
@@ -41,4 +44,22 @@ class WebAutomation:
     # searches for a work order request by request number
     @staticmethod
     def search_request(driver, request_number: int):
-        return None #TODO: implement
+        # search for request by number
+        search_box = driver.find_element(By.NAME, "WorkOrderNumber")
+        search_box.send_keys(str(request_number))
+
+        submit_button = driver.find_element(By.XPATH, "//input[@src='images/arrowbutton.gif']")
+        submit_button.click()
+
+        # scrape data and create request
+        driver.switch_to.default_content()
+        driver.switch_to.frame("botright")
+
+        request = WORequest(request_number)
+
+        request_room = driver.find_element(By.XPATH, "//tr[3]/td[1]/p/font/b").text
+        if request_room.startswith("for "):
+            request_room = request_room[4:]
+        request.room = request_room
+
+        # TODO: complete implementation
