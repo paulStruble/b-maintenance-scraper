@@ -1,6 +1,6 @@
 # A work order request
 
-from typing import Callable
+from typing import List
 
 
 class WORequest:
@@ -37,5 +37,5 @@ class WORequest:
 
     # returns a comma-separated string of all datapoints
     def to_csv(self) -> str:
-        string_list = [str(datapoint) for datapoint in self.to_list()]
-        return ','.join(string_list) + '\n'
+        string_list = [str(datapoint).replace('\n', '\\n') for datapoint in self.to_list()]
+        return ','.join(string_list)
