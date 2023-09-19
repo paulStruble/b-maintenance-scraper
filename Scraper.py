@@ -22,8 +22,8 @@ class Scraper:
 
         WebAutomation.login_calnet(self.driver, self.current_user)
 
-    # TODO: scrapes a work order request with the number [request_number]
+    # scrapes a work order request with the specified request number
     # returns a WORequest
     def scrape_request(self, request_number: int) -> WORequest:
         WebAutomation.select_request_button(self.driver)
-        WebAutomation.search_request(self.driver, request_number)
+        return WebAutomation.search_request(self.driver, request_number)
