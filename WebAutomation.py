@@ -33,6 +33,7 @@ class WebAutomation:
     def select_request_button(driver):
         # wait for sidebar to load #TODO: move into login_calnet if redundant
         try:
+            driver.switch_to.default_content()
             WebDriverWait(driver, 10).until(EC.frame_to_be_available_and_switch_to_it((By.NAME, "botleft")))
         except:
             print("frame 'botleft' could not be found or switched to")
@@ -44,9 +45,10 @@ class WebAutomation:
     # searches for a work order request by request number
     # returns a WORequest object
     @staticmethod
-    def search_request(driver, request_number: int):
+    def search_request(driver, request_number: int) -> WORequest:
         # search for request by number
         search_box = driver.find_element(By.NAME, "WorkOrderNumber")
+        search_box.clear()
         search_box.send_keys(str(request_number))
 
         submit_button = driver.find_element(By.XPATH, "//input[@src='images/arrowbutton.gif']")
