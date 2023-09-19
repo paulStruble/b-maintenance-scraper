@@ -42,6 +42,7 @@ class WebAutomation:
         dropdown_select.select_by_value("WR")
 
     # searches for a work order request by request number
+    # returns a WORequest object
     @staticmethod
     def search_request(driver, request_number: int):
         # search for request by number
@@ -55,11 +56,27 @@ class WebAutomation:
         driver.switch_to.default_content()
         driver.switch_to.frame("botright")
 
+        def find(xpath):
+            return driver.find_element(By.XPATH, xpath).text.strip(", ")
+
         request = WORequest(request_number)
 
         request_room = driver.find_element(By.XPATH, "//tr[3]/td[1]/p/font/b").text
         if request_room.startswith("for "):
             request_room = request_room[4:]
         request.room = request_room
+        request.status = find("//tr[3]/td[2]/strong/font")
+        request.building = find("/html/body/table/tbody/tr[2]/td[2]")
+        request.tag = find("/html/body/table/tbody/tr[3]/td[2]")
+        request.accept_date = find("/html/body/table/tbody/tr[4]/td[2]")
+        request.reject_date = find("/html/body/table/tbody/tr[5]/td[2]")
+        request.reject_reason = find("/html/body/table/tbody/tr[6]/td[2]")
+        request.location = find("/html/body/table/tbody/tr[2]/td[4]")
+        request.item_description = find("/html/body/table/tbody/tr[3]/td[4]")
+        request.work_order_num = find("/html/body/table/tbody/tr[4]/td[4]")
+        request.area_description = find("/html/body/table/tbody/tr[5]/td[4]")
+        request.requested_action = find("/html/body/table/tbody/tr[8]/td[2]")
+
+        return request
 
         # TODO: complete implementation
