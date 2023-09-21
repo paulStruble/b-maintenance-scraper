@@ -58,8 +58,12 @@ class WebAutomation:
         driver.switch_to.default_content()
         driver.switch_to.frame("botright")
 
-        def find(xpath):
-            return driver.find_element(By.XPATH, xpath).text.strip(", ")
+        def find(xpath) -> str:
+            try:
+                return driver.find_element(By.XPATH, xpath).text.strip(", ")
+            except:
+                print(f"failed to find element at XPATH: '{xpath}'")
+                return None
 
         request = WORequest(request_number)
 
