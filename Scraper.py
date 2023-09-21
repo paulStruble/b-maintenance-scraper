@@ -6,7 +6,7 @@ from selenium import webdriver
 
 from WebAutomation import *
 from User import *
-import WORequest
+from WORequest import *
 
 class Scraper:
     def __init__(self):
@@ -31,4 +31,3 @@ class Scraper:
         except:
             print(f"failed to retrieve request #{request_number}")
             return WORequest(request_number)
-
