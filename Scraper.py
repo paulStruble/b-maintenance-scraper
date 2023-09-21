@@ -26,4 +26,9 @@ class Scraper:
     # returns a WORequest
     def scrape_request(self, request_number: int) -> WORequest:
         WebAutomation.select_request_button(self.driver)
-        return WebAutomation.search_request(self.driver, request_number)
+        try:
+            return WebAutomation.search_request(self.driver, request_number)
+        except:
+            print(f"failed to retrieve request #{request_number}")
+            return WORequest(request_number)
+
