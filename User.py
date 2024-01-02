@@ -11,5 +11,5 @@ class User:
     @staticmethod
     def login_prompt():
         new_username = input("Username: ")
-        new_password = getpass.getpass("Password: ")
+        new_password = input("Password: ")  # getpass.getpass("Password: ")
         return User(new_username, new_password)
