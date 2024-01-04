@@ -1,6 +1,8 @@
 # utilities to communicate with request database
 
 import psycopg2
+
+import Scraper
 from WORequest import WORequest
 
 
@@ -32,14 +34,21 @@ class RequestDB:
 
         self.connection.commit()
 
-    # TODO: clean data, escape coding characters, null entries, try statement for duplicate requests (prevent crash), add audio
-    # TODO: scrape request inside this function
-    def add_request(self, request: WORequest):
+    # a
+    # TODO: clean data, escape coding characters, null entries, add audio
+    def add_request(self, request_id: int, scraper: Scraper):
         # skip this request if an entry with the same id already exists
-        select_query = f"SELECT * FROM requests WHERE id = {request.id}"
+        select_query = f"SELECT * FROM requests WHERE id = {request_id}"
         self.cursor.execute(select_query)
         if self.cursor.fetchone():
-            print(f"entry with id [{request.id}] already exists ... skipping this insert request")
+            print(f"entry with id [{request_id}] already exists ... skipping this insert request")
+            return None
+
+        # scrape request
+        try:
+            request = scraper.scrape_request(request_id)
+        except:
+            print(f"failed to scrape request with id [{request_id}]")
             return None
 
         # filter out all null values and their corresponding columns
