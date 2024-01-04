@@ -9,13 +9,17 @@ from User import *
 from WORequest import *
 
 class Scraper:
-    def __init__(self):
+    def __init__(self, headless=True):
         self.current_user = None
 
-        self.driver = webdriver.Chrome()
+        self.options = webdriver.ChromeOptions()
+        self.options.headless = headless
+        self.driver = webdriver.Chrome(options=self.options)
         self.driver.set_window_size(1905, 1025) #TODO: set window size relative to monitor resolution
 
     # prompts user for calnet login
+    # TODO: if duo login times out, script crashes - add try statement and/or loop
+    # TODO: account for incorrect login info - loop
     def login_calnet(self):
         print('CALNET LOGIN:')
         self.current_user = User.login_prompt()
@@ -31,3 +35,11 @@ class Scraper:
         except:
             print(f"failed to retrieve request #{request_number}")
             return WORequest(request_number)
+
+    # TODO: finds the maintenance request with the lowest ID value
+    def find_start(self):
+        return None
+
+    # TODO: finds the maintenance request with the highest ID value
+    def find_end(self):
+        return None
