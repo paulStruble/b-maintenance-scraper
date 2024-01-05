@@ -1,3 +1,7 @@
 # main driver class to run program from
 
-class Driver:
+from Log import *
+
+if __name__ == "__main__":
+    log = Log()
+
