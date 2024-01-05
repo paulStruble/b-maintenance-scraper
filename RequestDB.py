@@ -1,18 +1,21 @@
 # utilities to communicate with request database
+# TODO: acquire default values from config/profile
 
 import psycopg2
 
 import Scraper
+from Log import *
 from WORequest import WORequest
 
 
 class RequestDB:
-    def __init__(self):
+    def __init__(self, log: Log, host="localhost", dbname="postgres", user="postgres", password="postgres", port=5432):
+        self.log = log
+        self.dbname = dbname
         self.all_columns = ["id", "room", "status", "building", "tag", "accept_date", "reject_date", "reject_reason",
                             "location", "item_description", "work_order_num", "area_description", "requested_action"]
 
-        self.connection = psycopg2.connect(host="localhost", dbname="postgres", user="postgres", password="postgres",
-                                      port=5432)
+        self.connection = psycopg2.connect(host=host, dbname=dbname, user=user, password=password, port=5432)
         self.cursor = self.connection.cursor()
 
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS requests (
@@ -34,22 +37,17 @@ class RequestDB:
 
         self.connection.commit()
 
-    # a
-    # TODO: clean data, escape coding characters, null entries, add audio
+    # scrape and insert a work request into the database
     def add_request(self, request_id: int, scraper: Scraper):
         # skip this request if an entry with the same id already exists
         select_query = f"SELECT * FROM requests WHERE id = {request_id}"
         self.cursor.execute(select_query)
         if self.cursor.fetchone():
-            print(f"entry with id [{request_id}] already exists ... skipping this insert request")
+            self.log.add(f"entry with id [{request_id}] already exists ... skipping this insert request")
             return None
 
         # scrape request
-        try:
-            request = scraper.scrape_request(request_id)
-        except:
-            print(f"failed to scrape request with id [{request_id}]")
-            return None
+        request = scraper.scrape_request(request_id)
 
         # filter out all null values and their corresponding columns
         columns = [c for c in self.all_columns if getattr(request, c)]
@@ -60,6 +58,7 @@ class RequestDB:
 
         self.cursor.execute(insert_query)
         self.connection.commit()
+        self.log.add(f"successfully inserted request [{request_id}] to database [{self.dbname}]")
 
     # close the connection to the database
     def close(self):
