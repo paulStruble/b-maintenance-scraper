@@ -1,21 +1,21 @@
 # tool to scrape work order requests from maintenance website
 
-#from bs4 import beatifulsoup4
-#import requests
+from Log import *
 from selenium import webdriver
-
 from WebAutomation import *
 from User import *
 from WORequest import *
 
+
 class Scraper:
-    def __init__(self, headless=True):
+    def __init__(self, headless: bool = True):
         self.current_user = None
 
         self.options = webdriver.ChromeOptions()
         self.options.headless = headless
         self.driver = webdriver.Chrome(options=self.options)
-        self.driver.set_window_size(1905, 1025) #TODO: set window size relative to monitor resolution
+        if not headless:
+            self.driver.set_window_size(1905, 1025) #TODO: set window size relative to monitor resolution
 
     # prompts user for calnet login
     # TODO: if duo login times out, script crashes - add try statement and/or loop
@@ -28,18 +28,13 @@ class Scraper:
 
     # scrapes a work order request with the specified request number
     # returns a WORequest
-    def scrape_request(self, request_number: int) -> WORequest:
+    def scrape_request(self, request_id: int) -> WORequest:
         WebAutomation.select_request_button(self.driver)
         try:
-            return WebAutomation.search_request(self.driver, request_number)
+            return WebAutomation.search_request(self.driver, request_id)
         except:
-            print(f"failed to retrieve request #{request_number}")
-            return WORequest(request_number)
+            return WORequest(request_id) # return an empty request if request cannot be found
 
-    # TODO: finds the maintenance request with the lowest ID value
-    def find_start(self):
-        return None
-
-    # TODO: finds the maintenance request with the highest ID value
-    def find_end(self):
+    # TODO: finds the request with the highest id
+    def find_last(self):
         return None
