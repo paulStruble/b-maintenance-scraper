@@ -20,21 +20,24 @@ from Scraper import *
 #
 # print(scraper.scrape_request(0).to_csv())
 
-# scraper = Scraper()
-# database = RequestDB()
-#
-# scraper.login_calnet()
-# for request_id in range(200000, 400001, 202):
-#     try:
-#         database.add_request(request_id, scraper)  # TODO: log
-#     except:
-#         print(f"Error inserting with Request ID: {request_id}")
-#
-# database.close()
-# input()
-
 from Log import *
+import traceback
 
-my_log = Log()
-my_log.add("this is a call to Log.add!")
-my_log.add_quiet("this is a call to Log.add_quiet!")
+log = Log()
+scraper = Scraper()
+database = RequestDB(log)
+
+scraper.login_calnet()
+for request_id in range(1, 61):
+    try:
+        database.add_request(request_id, scraper)
+    except:
+        log.add(f"Error inserting with Request ID [{request_id}]:\n{traceback.format_exc()}\n")
+
+database.close()
+
+# from Log import *
+#
+# my_log = Log()
+# my_log.add("this is a call to Log.add!")
+# my_log.add_quiet("this is a call to Log.add_quiet!")
