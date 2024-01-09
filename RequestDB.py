@@ -16,11 +16,17 @@ class RequestDB:
         self.log = log
         self.calnet_user = calnet_user
         self.driver_cookies = driver_cookies
+
+        self.host = host
         self.dbname = dbname
+        self.user = user
+        self.password = password
+        self.port = port
+
         self.all_columns = ["id", "room", "status", "building", "tag", "accept_date", "reject_date", "reject_reason",
                             "location", "item_description", "work_order_num", "area_description", "requested_action"]
 
-        self.connection = psycopg2.connect(host=host, dbname=dbname, user=user, password=password, port=5432)
+        self.connection = psycopg2.connect(host=self.host, dbname=self.dbname, user=self.user, password=self.password, port=self.port)
         self.cursor = self.connection.cursor()
 
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS requests (
@@ -43,12 +49,12 @@ class RequestDB:
         self.connection.commit()
 
     # scrape and insert a work request into the database
-    def add_request(self, request_id: int, scraper: Scraper):
+    def add_request(self, request_id: int, scraper: Scraper, cursor):
         try:
             # skip this request if an entry with the same id already exists
             select_query = f"SELECT * FROM requests WHERE id = {request_id}"
-            self.cursor.execute(select_query)
-            if self.cursor.fetchone():
+            cursor.execute(select_query)
+            if cursor.fetchone():
                 self.log.add(f"entry with id [{request_id}] already exists ... skipping this insert request")
                 return None
 
@@ -62,7 +68,7 @@ class RequestDB:
             values = ', '.join([f"'{v}'" for v in values])
             insert_query = f"INSERT INTO requests ({columns}) VALUES ({values});"
 
-            self.cursor.execute(insert_query)
+            cursor.execute(insert_query)
             self.connection.commit()
             self.log.add(f"successfully inserted request [{request_id}] to database [{self.dbname}]")
         except Exception as e:
@@ -71,13 +77,17 @@ class RequestDB:
 
     # TODO: run parallel directly from add_request_range using boolean parallel argument
     # scrape and insert a range of work requests into the database (sequential)
-    def add_request_range(self, start: int, stop: int, scraper: Scraper):
+    def add_request_range(self, start: int, stop: int, scraper: Scraper = None, cursor = None):
+        if not cursor:
+            cursor = self.cursor
         for request_id in range(start, stop):
-            self.add_request(request_id, scraper)
+            self.add_request(request_id, scraper, cursor)
 
+    # TODO: close connection
     # TODO: add headless option to config
+    # TODO: calnet_user should be passed as argument, not an instance variable
     # generate a list of argument tuples for each process (unique scrapers and id ranges)
-    def generate_args_add_request_range_parallel(self, start: int, stop: int, process_count=4) -> list[tuple[int, int, Scraper]]:
+    def generate_args_add_request_range_parallel(self, start: int, stop: int, process_count=4) -> list[tuple]:
         process_args = []
         process_stop = start
         remaining_tasks = stop - start
@@ -85,13 +95,14 @@ class RequestDB:
         for remaining_processes in range(process_count, 0, -1):
             scraper = Scraper(user=self.calnet_user, cookies=self.driver_cookies, headless=False)  # pass info from a logged-in browser
             # prevents the need to log in again for every process
+            cursor = psycopg2.connect(host=self.host, dbname=self.dbname, user=self.user, password=self.password, port=self.port).cursor()
 
             process_task_count = math.ceil(remaining_tasks / remaining_processes)
             remaining_tasks -= process_task_count
             process_start = process_stop
             process_stop = process_start + process_task_count
 
-            args = (process_start, process_stop, scraper)
+            args = (process_start, process_stop, scraper, cursor)
             process_args.append(args)
 
         return process_args
