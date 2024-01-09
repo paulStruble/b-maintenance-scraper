@@ -24,20 +24,24 @@ from Log import *
 import traceback
 
 log = Log()
-scraper = Scraper()
-database = RequestDB(log)
+scraper = Scraper(headless=False)
+# cookies = scraper.get_cookies()
+user = scraper.user
 
-scraper.login_calnet()
-for request_id in range(1, 61):
-    try:
-        database.add_request(request_id, scraper)
-    except:
-        log.add(f"Error inserting with Request ID [{request_id}]:\n{traceback.format_exc()}\n")
+database = RequestDB(log, user)
+try:
+    database.add_request_range(0, 100001)
+except Exception as e:
+    log.add(f"exited with error traceback:\n{traceback.format_exc()}\n")
 
 database.close()
+
+# args = database.generate_args_add_request_range_parallel(3, 26, 5)
+# input()
 
 # from Log import *
 #
 # my_log = Log()
 # my_log.add("this is a call to Log.add!")
 # my_log.add_quiet("this is a call to Log.add_quiet!")
+
