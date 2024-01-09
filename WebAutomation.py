@@ -12,7 +12,7 @@ class WebAutomation:
 
     # logs in to CalNet with the given [driver] as [user]
     @staticmethod
-    def login_calnet(driver, user):
+    def login_calnet(driver, user, duo: bool = True):
         url = "https://auth.berkeley.edu/cas/login?service=https://maintenance.housing.berkeley.edu/cas2/login.aspx"
 
         # prompt for CalNet login credentials
@@ -24,9 +24,10 @@ class WebAutomation:
         driver.find_element(By.ID, "submit").click()
 
         # wait for DUO Mobile confirmation
-        print('---CONFIRM LOGIN ON DUO MOBILE---')
-        WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "dont-trust-browser-button"))).click()
-        print('---LOGIN CONFIRMED---')
+        if duo:
+            print('---CONFIRM LOGIN ON DUO MOBILE---')
+            WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "trust-browser-button"))).click()
+            print('---LOGIN CONFIRMED---')
 
     # selects "Work Request" from the maintenance tracking dropdown menu
     @staticmethod
