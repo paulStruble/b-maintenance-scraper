@@ -1,5 +1,6 @@
 # a user with attached login info
-import getpass
+
+from pwinput import pwinput
 
 
 class User:
@@ -11,5 +12,10 @@ class User:
     @staticmethod
     def login_prompt():
         new_username = input("Username: ")
-        new_password = input("Password: ")  # getpass.getpass("Password: ")
+        new_password = pwinput(prompt="Password: ")
         return User(new_username, new_password)
+
+    if __name__ == "__main__":
+        login = login_prompt()
+        print(f"Username: {login.username}")
+        print(f"Password: {login.password}")
