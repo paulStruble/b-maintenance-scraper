@@ -10,12 +10,11 @@ class User:
 
     # prompts the user for login credentials and returns a new User object with the same credentials
     @staticmethod
-    def login_prompt():
+    def login_prompt(hidden: bool = True):
         new_username = input("Username: ")
-        new_password = pwinput(prompt="Password: ")
-        return User(new_username, new_password)
+        if hidden:
+            new_password = pwinput(prompt="Password: ")
+        else:
+            new_password = input("Password: ")
 
-    if __name__ == "__main__":
-        login = login_prompt()
-        print(f"Username: {login.username}")
-        print(f"Password: {login.password}")
+        return User(new_username, new_password)
