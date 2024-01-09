@@ -5,6 +5,9 @@
 # TODO: implement log path
 # TODO: create main menu sequence
 # TODO: config file (instead of settings)
+# TODO: comments in functions as multi-line strings
+# TODO: unit tests: generate_add_request_range_parallel_args
+# TODO: bypass duo after first login using pickle to dump and load cookies
 
 class Settings:
     def __init__(self):
@@ -13,4 +16,4 @@ class Settings:
         console_output = True
         headless = True
         parallel = False
-        cores = 1
+        process_cont = 1
