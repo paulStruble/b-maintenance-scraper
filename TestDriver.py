@@ -1,5 +1,6 @@
 # an independent driver class solely for testing and debugging purposes
 # TODO: test class - write JUnit tests - test features on a series of random work requests
+import multiprocessing
 from RequestDB import RequestDB
 from Scraper import *
 #
@@ -23,18 +24,18 @@ from Scraper import *
 from Log import *
 import traceback
 
-log = Log()
-scraper = Scraper(headless=False)
-# cookies = scraper.get_cookies()
-user = scraper.user
-
-database = RequestDB(log, user)
-try:
-    database.add_request_range(0, 100001)
-except Exception as e:
-    log.add(f"exited with error traceback:\n{traceback.format_exc()}\n")
-
-database.close()
+# log = Log()
+# scraper = Scraper(headless=False)
+# # cookies = scraper.get_cookies()
+# user = scraper.user
+#
+# database = RequestDB(log, user)
+# try:
+#     database.add_request_range(0, 100001)
+# except Exception as e:
+#     log.add(f"exited with error traceback:\n{traceback.format_exc()}\n")
+#
+# database.close()
 
 # args = database.generate_args_add_request_range_parallel(3, 26, 5)
 # input()
@@ -45,3 +46,13 @@ database.close()
 # my_log.add("this is a call to Log.add!")
 # my_log.add_quiet("this is a call to Log.add_quiet!")
 
+user = User.login_prompt(hidden=False)
+scraper1 = Scraper(user=user, headless=False)
+scraper2 = Scraper(user=user, headless=False)
+
+log = Log()
+database = RequestDB(log=log, calnet_user=user)
+
+process_args = [(100000, 100050, scraper1), (100050, 100100, scraper2)]
+with multiprocessing.Pool(processes=2) as pool:
+    pool.starmap(database.add_request_range, process_args)
