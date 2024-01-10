@@ -1,7 +1,12 @@
 # tool to scrape work order requests from maintenance website
 # TODO: load browser state with driver.get_cookies() and driver.add_cookie({'domain':''})
-from selenium.common import exceptions
 
+import hashlib
+import os
+import shutil
+
+from selenium.common import exceptions
+import User
 from selenium import webdriver
 from WebAutomation import *
 from WORequest import *
@@ -9,33 +14,43 @@ from User import *
 
 
 class Scraper:
-    def __init__(self, user: User = None, cookies: list[dict] = None, headless: bool = True):
-        # initialize driver
-        self.options = webdriver.ChromeOptions()
-        self.options.headless = headless
-        self.driver = webdriver.Chrome(options=self.options)
-        if not headless:
-            self.driver.set_window_size(1280, 720) #TODO: set window size relative to monitor resolution, config
-
-        # calnet login
+    def __init__(self, user: User = None, process_id: int = 0, headless: bool = True):
         self.user = user
-        self.login_calnet(cookies)
+        self.driver = self.initialize_driver(process_id=process_id, headless=headless)
+        self.login_calnet()
+
+    # initialize a webdriver instance (chromedriver)
+    def initialize_driver(self, process_id, headless):
+        chrome_options = webdriver.ChromeOptions()
+
+        # load or create a unique chrome profile for this webdriver instance
+        profile_name = hashlib.sha256(self.user.username.encode('utf-8')).hexdigest()
+        profile_path = os.path.dirname(os.path.realpath(__file__)) + f"\\Profiles\\{profile_name}"
+        profile_instance_path = profile_path + f"\\p{process_id}"
+        if not os.path.exists(profile_instance_path):
+            if process_id == 0:
+                os.makedirs(profile_instance_path)
+            else:
+                base_instance_path = profile_path + r"\p0"
+                shutil.copytree(base_instance_path, profile_instance_path)
+
+        # configure and initialize webdriver instance
+        chrome_options.add_argument(f"user-data-dir={profile_instance_path}")
+        chrome_options.headless = headless
+        driver = webdriver.Chrome(options=chrome_options)
+        if not headless:
+            driver.set_window_size(1280, 720)  # TODO: set window size relative to monitor resolution, config
+        return driver
 
     # prompts user for calnet login
     # TODO: if duo login times out, script crashes - add try statement and/or loop
     # TODO: account for incorrect login info - loop
-    def login_calnet(self, cookies: list[dict]):
+    def login_calnet(self):
         if not self.user:
             print('CALNET LOGIN:')
             self.user = User.login_prompt()
 
         WebAutomation.login_calnet(self.driver, self.user)
-
-        # if cookies:
-        #     WebAutomation.login_calnet(self.driver, self.user, duo=False)
-        #     self.add_cookies(cookies)
-        # else:
-        #     WebAutomation.login_calnet(self.driver, self.user, duo=True)
 
     # scrapes a work order request with the specified request number
     # returns a WORequest
