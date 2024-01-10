@@ -14,20 +14,24 @@ class WebAutomation:
     @staticmethod
     def login_calnet(driver, user, duo: bool = True):
         url = "https://auth.berkeley.edu/cas/login?service=https://maintenance.housing.berkeley.edu/cas2/login.aspx"
-
-        # prompt for CalNet login credentials
         driver.get(url)
-        driver.find_element(By.ID, "username").send_keys(user.username)
-        driver.find_element(By.ID, "password").send_keys(user.password)
 
-        # click signin button
-        driver.find_element(By.ID, "submit").click()
+        if driver.title == "CAS - Central Authentication Service":
+            # prompt for CalNet login credentials
+            driver.find_element(By.ID, "username").send_keys(user.username)
+            driver.find_element(By.ID, "password").send_keys(user.password)
+
+            # click signin button
+            driver.find_element(By.ID, "submit").click()
 
         # wait for DUO Mobile confirmation
-        if duo:
-            print('---CONFIRM LOGIN ON DUO MOBILE---')
-            WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "trust-browser-button"))).click()
-            print('---LOGIN CONFIRMED---')
+        try:
+            WebDriverWait(driver, 5).until(EC.title_is("TMA iServiceDesk - University of California-Berkeley"))
+        except:
+            if driver.title == "Duo Security":
+                print('---CONFIRM LOGIN ON DUO MOBILE---')
+                WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "trust-browser-button"))).click()
+                print('---LOGIN CONFIRMED---')
 
     # selects "Work Request" from the maintenance tracking dropdown menu
     @staticmethod
