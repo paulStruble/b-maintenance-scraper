@@ -46,13 +46,4 @@ import traceback
 # my_log.add("this is a call to Log.add!")
 # my_log.add_quiet("this is a call to Log.add_quiet!")
 
-user = User.login_prompt(hidden=False)
-scraper1 = Scraper(user=user, headless=False)
-scraper2 = Scraper(user=user, headless=False)
-
-log = Log()
-database = RequestDB(log=log, calnet_user=user)
-
-process_args = [(100000, 100050, scraper1), (100050, 100100, scraper2)]
-with multiprocessing.Pool(processes=2) as pool:
-    pool.starmap(database.add_request_range, process_args)
+scraper = Scraper()
