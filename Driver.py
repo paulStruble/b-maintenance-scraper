@@ -5,48 +5,60 @@ from collections import defaultdict
 from RequestDB import RequestDB
 from Scraper import *
 from Log import *
+from Config import *
 
 
 class Driver:
     def __init__(self):
+        self.config = Config()
         self.log = Log()
-        self.user = User.login_prompt(hidden=False)
-        self.database = RequestDB(log=self.log, calnet_user=self.user, headless=False)  # TODO: config
+        password_input_hidden = self.config.get("Options", "b_password_inputs_hidden")
+        self.user = User.login_prompt(hidden=password_input_hidden)
+
+        host, dbname, user, password, port = self.config.get_database_args()
+        if self.config.get("Database", "b_input_database_password_at_runtime"):
+            if password != password_input_hidden:
+                password = pwinput(prompt="Database Password: ")
+            else:
+                password = input("Database Password: ")
+        headless = self.config.get("Scraper", "b_primary_scraper_headless")
+        self.database = RequestDB(log=self.log, calnet_user=self.user, host=host, dbname=dbname, user=user,
+                                  password=password, port=port, headless=headless)
 
     def main_menu(self):
         options = [1, 2, 3]
         exit_value = 3
         choice = None
         while choice != exit_value:
-            print("""
-            ------------ Main Menu ------------
-            Options:
-            1. Scrape a range of work order requests and write to your database
-            2. Settings
-            3. Exit
-            -----------------------------------
-            """)
-            choice = int(input())
+            print('-' * (shutil.get_terminal_size().columns - 1))
+            print("\nOptions:\n\n"
+                  "1. Scrape a range of work order requests and write to your database\n"
+                  "2. Settings\n"
+                  "3. Exit\n")
+            print('-' * (shutil.get_terminal_size().columns - 1))
             while choice not in options:
-                choice = int(input())
+                choice = int(input("Input: "))
 
             match choice:
                 case 1:
                     self.scrape_range_prompt()
+                    choice = None
                 case 2:
-                    self.settings_menu()
+                    self.config.settings_menu()
+                    choice = None
                 case 3:
                     return None
 
     def scrape_range_prompt(self):
-        start = int(input("start id: "))
+        start = max(int(input("start id: ")), 1)  # inputting 0 causes the program to crash
         stop = int(input("stop id: "))
-        num_processes = int(input("process count: "))
+        num_processes = self.config.get("Scraper", "i_parallel_process_count")
 
         print(f"Initializing process: scrape and write requests from ids [{start}] to [{stop}] on [{num_processes}] "
               f"processes")
         if num_processes > 1:
-            self.add_request_range_parallel(start, stop, num_processes)
+            headless = self.config.get("Scraper", "b_parallel_scrapers_headless")
+            self.add_request_range_parallel(start, stop, num_processes, headless)
         else:
             self.database.add_request_range(start, stop)
         print(f"Finished scraping requests from ids [{start}] to [{stop}]")
