@@ -13,8 +13,8 @@ from typing import Iterable
 
 
 class RequestDB:
-    def __init__(self, log: Log, calnet_user: User, process_id: int = 0, headless=True, host="localhost",
-                 dbname="postgres", user="postgres", password="postgres", port=5432):
+    def __init__(self, log: Log, calnet_user: User, host: str, dbname: str, user: str, password: str, port: int,
+                 process_id: int = 0, headless=True):
         self.scraper = Scraper(user=calnet_user, process_id=process_id, headless=headless)
         self.log = log
         self.db_name = dbname
