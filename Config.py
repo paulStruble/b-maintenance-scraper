@@ -1,6 +1,7 @@
 # configurable settings for various program features
 # TODO: comments + standardize comments
-# TODO: comments in functions as multi-line strings
+# TODO: remove non-base chrome profiles (take up a lot of storage)
+# TODO: first-time setup
 import configparser
 import os
 import shutil
@@ -14,8 +15,16 @@ class Config:
         self.config = configparser.ConfigParser()
         self.config.read(self.path)
 
-    # retrieve a config option
-    def get(self, section, option):
+    def get(self, section: str, option: str):
+        """Retrieve an option from the config.
+
+        Args:
+            section: The config section to retrieve from.
+            option: the name of the specific option to retrieve.
+
+        Returns:
+            The value of the option in the config.
+        """
         value = self.config[section][option]
 
         match option[0]:
@@ -29,7 +38,13 @@ class Config:
             case 'i':
                 return int(value)
 
-    def get_database_args(self):
+    def get_database_args(self) -> tuple[str, str, str, str, int]:
+        """Retrieve a tuple of arguments from the config to initialize a database connection (used to initialize a
+        RequestDB object).
+
+        Returns:
+            A tuple of arguments from the config to initialize a RequestDB object.
+        """
         host = self.config.get('Database', 's_host')
         dbname = self.config.get('Database', 's_name')
         user = self.config.get('Database', 's_user')
@@ -37,22 +52,28 @@ class Config:
         port = self.config.get('Database', 'i_port')
         return host, dbname, user, password, port
 
-    # update a config option
-    def set(self, section, option, value):
+    def set(self, section, option, value) -> None:
+        """Update an option in the config.
+
+        Args:
+            section: The section of the option to update.
+            option: The specific option to update.
+            value: The new value to set the option to.
+        """
         self.config[section][option] = value
 
-    # save changes to the config
-    def save(self):
+    def save(self) -> None:
+        """Save and write changes made to the config."""
         with open(self.path, 'w') as config_file:
             self.config.write(config_file)
         self.config.read(self.path)
 
-    # cancel changes to the config (before they have been saved/written)
-    def revert(self):
+    def revert(self) -> None:
+        """Cancel changes made to the config (before they have been saved/written)."""
         self.config.read(self.path)
 
-    # print config to the console
-    def print_settings(self):
+    def print_settings(self) -> None:
+        """Print the current config to the console."""
         print('-' * (shutil.get_terminal_size().columns - 1))
         print("\nCurrent Settings:\n")
         for section in self.config.sections():
@@ -63,6 +84,15 @@ class Config:
         print('-' * (shutil.get_terminal_size().columns - 1))
 
     def valid_value_input(self, option: str, value: str) -> bool:
+        """Check if a value has the same type as a specified option.
+
+        Args:
+            option: The config option to check against.
+            value: The new value to check for validity.
+
+        Returns:
+            True if the value is valid, False otherwise.
+        """
         type_tag = option[0]
         match type_tag:
             case 'b':  # boolean
@@ -78,7 +108,8 @@ class Config:
             case _:
                 return False
 
-    def update_option(self):
+    def update_option(self) -> None:
+        """Prompt the user to update a single config option. Update the option and save."""
         print('-' * (shutil.get_terminal_size().columns - 1))
         section, option, value = "", "", ""
 
@@ -92,8 +123,8 @@ class Config:
         self.set(section, option, value)
         self.save()
 
-    # menu for viewing and editing the current config from the console
-    def settings_menu(self):
+    def settings_menu(self) -> None:
+        """Prompt the user with a menu for viewing and editing the current config from the console."""
         choice = None
         exit_value = 2
         options = [1, 2]
