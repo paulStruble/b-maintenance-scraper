@@ -1,5 +1,4 @@
 # configurable settings for various program features
-# TODO: comments + standardize comments
 # TODO: remove non-base chrome profiles (take up a lot of storage)
 # TODO: first-time setup
 import configparser
@@ -9,8 +8,9 @@ import shutil
 
 class Config:
     def __init__(self, path=None):
+        """An ini configuration for the current program with functions to retrieve and modify options at runtime."""
         if path is None:
-            path = os.path.dirname(os.path.realpath(__file__)) + f"\\config.ini"
+            path = os.path.dirname(os.path.realpath(__file__)) + f"\\config.ini"  # TODO: copy default config
         self.path = path
         self.config = configparser.ConfigParser()
         self.config.read(self.path)
@@ -27,20 +27,22 @@ class Config:
         """
         value = self.config[section][option]
 
+        # Cast the value to the correct datatype.
+        # The first character of each option name symbolizes the option's datatype.
         match option[0]:
-            case 's':
+            case 's':  # str
                 return value
-            case 'b':
+            case 'b':  # bool
                 if value == 'true':
                     return True
                 elif value == 'false':
                     return False
-            case 'i':
+            case 'i':  # int
                 return int(value)
 
     def get_database_args(self) -> tuple[str, str, str, str, int]:
         """Retrieve a tuple of arguments from the config to initialize a database connection (used to initialize a
-        RequestDB object).
+        RequestDB object). Note that initializing a RequestDB object still requires other arguments.
 
         Returns:
             A tuple of arguments from the config to initialize a RequestDB object.
@@ -53,7 +55,7 @@ class Config:
         return host, dbname, user, password, port
 
     def set(self, section, option, value) -> None:
-        """Update an option in the config.
+        """Update an option in the config. Does not save the change.
 
         Args:
             section: The section of the option to update.
@@ -66,7 +68,7 @@ class Config:
         """Save and write changes made to the config."""
         with open(self.path, 'w') as config_file:
             self.config.write(config_file)
-        self.config.read(self.path)
+        self.config.read(self.path)  # Update the currently loaded config to account for change
 
     def revert(self) -> None:
         """Cancel changes made to the config (before they have been saved/written)."""
@@ -74,7 +76,7 @@ class Config:
 
     def print_settings(self) -> None:
         """Print the current config to the console."""
-        print('-' * (shutil.get_terminal_size().columns - 1))
+        print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
         print("\nCurrent Settings:\n")
         for section in self.config.sections():
             print(f"[{section}]")
@@ -84,7 +86,7 @@ class Config:
         print('-' * (shutil.get_terminal_size().columns - 1))
 
     def valid_value_input(self, option: str, value: str) -> bool:
-        """Check if a value has the same type as a specified option.
+        """Check if a value has the same datatype as a specified option.
 
         Args:
             option: The config option to check against.
@@ -95,11 +97,11 @@ class Config:
         """
         type_tag = option[0]
         match type_tag:
-            case 'b':  # boolean
+            case 'b':  # bool
                 return value in ('true', 'false')
-            case 's':  # string
+            case 's':  # str
                 return True
-            case 'i':  # integer
+            case 'i':  # int
                 try:
                     int(value)
                     return True
@@ -110,7 +112,7 @@ class Config:
 
     def update_option(self) -> None:
         """Prompt the user to update a single config option. Update the option and save."""
-        print('-' * (shutil.get_terminal_size().columns - 1))
+        print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
         section, option, value = "", "", ""
 
         while section not in self.config.sections():
@@ -135,7 +137,7 @@ class Config:
                   "1. Update settings\n"
                   "2. Return to main menu\n\n"
                   "NOTE: Some settings require the program to be restarted in order to take full effect\n")
-            print('-' * (shutil.get_terminal_size().columns - 1))
+            print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
 
             while choice not in options:
                 choice = int(input("Input: "))
