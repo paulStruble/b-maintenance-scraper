@@ -25,7 +25,7 @@ class Driver:
             This function should only be used to connect to the DRIVER'S database (NOT for parallel processes).
 
         Returns:
-            The primary database object
+            The primary database object.
         """
         host, dbname, user, password, port = self.config.get_database_args()
 
@@ -36,7 +36,7 @@ class Driver:
             else:
                 password = input("Database Password: ")
 
-        headless = self.config.get("Scraper", "b_primary_scraper_headless")  # for primary scraper only
+        headless = self.config.get("Scraper", "b_primary_scraper_headless")  # For primary scraper only
         database = RequestDB(log=self.log, calnet_user=self.user, host=host, dbname=dbname, user=user,
                              password=password, port=port, headless=headless)
         return database
@@ -47,9 +47,9 @@ class Driver:
         exit_value = 3
         choice = None
 
-        # main menu loop
+        # Main menu loop
         while choice != exit_value:
-            print('-' * (shutil.get_terminal_size().columns - 1))  # horizontal line (cosmetic)
+            print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
             print("\nOptions:\n\n"
                   "1. Scrape a range of work order requests and write to your database\n"
                   "2. Settings\n"
@@ -71,16 +71,16 @@ class Driver:
 
     def scrape_range_prompt(self) -> None:
         """Prompt the user to scrape a range of work order requests and add them to the database."""
-        start = max(int(input("start id: ")), 1)  # inputting 0 causes the program to crash
+        start = max(int(input("start id: ")), 1)  # Inputting 0 causes the program to crash
         stop = int(input("stop id: "))
-        num_processes = self.config.get("Scraper", "i_parallel_process_count")  # parallel process count
+        num_processes = self.config.get("Scraper", "i_parallel_process_count")  # Parallel process count
 
         print(f"Initializing process: scrape and write requests from ids [{start}] to [{stop}] on [{num_processes}] "
               f"processes")
-        if num_processes > 1:  # parallel processing
+        if num_processes > 1:  # Parallel processing
             headless = self.config.get("Scraper", "b_parallel_scrapers_headless")
             self.add_request_range_parallel(start, stop, num_processes, headless)
-        else:  # sequential processing
+        else:  # Sequential processing
             self.database.add_request_range(start, stop)
         print(f"Finished scraping requests from ids [{start}] to [{stop}]")
 
@@ -134,7 +134,7 @@ class Driver:
             request_ids = id_dict[process_id]
             args.append((request_ids, log, calnet_user, process_id + 1, headless, db_args))
 
-        self.database.close()  # main scraper needs to be closed to allow for its Chrome profile to be cloned for
+        self.database.close()  # Main scraper needs to be closed to allow for its Chrome profile to be cloned for
         # each parallel process
         del self.database
         with multiprocessing.Pool(processes=num_processes) as pool:
@@ -146,7 +146,7 @@ class Driver:
         self.main_menu()
 
 
-# main program run point
+# Main program run point
 if __name__ == "__main__":
     driver = Driver()
     driver.run()
