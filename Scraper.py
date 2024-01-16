@@ -1,11 +1,10 @@
-# tool to scrape work order requests from maintenance website
-# TODO: load browser state with driver.get_cookies() and driver.add_cookie({'domain':''})
-
 import hashlib
 import os
 import shutil
 
 from selenium.common import exceptions
+from selenium.webdriver.chrome.webdriver import WebDriver
+
 import User
 from selenium import webdriver
 from WebAutomation import *
@@ -15,26 +14,43 @@ from User import *
 
 class Scraper:
     def __init__(self, user: User = None, process_id: int = 0, headless: bool = True):
+        """An automated webscraper for retrieving work order request data.
+
+        Args:
+            user: Calnet user for Calnet login and authorization.
+            process_id: Unique process id for this scraper (for parallel processing).
+            headless: Whether to run the webdriver in headless or headful mode.
+        """
         self.user = user
         self.driver = self.initialize_driver(process_id=process_id, headless=headless)
         self.login_calnet()
 
-    # initialize a webdriver instance (chromedriver)
-    def initialize_driver(self, process_id, headless):
+    def initialize_driver(self, process_id, headless) -> WebDriver:
+        """Initialize the webdriver instance (chromedriver).
+
+        Args:
+            process_id: Unique process id for this scraper (for parallel processing).
+            headless: Whether to run the webdriver in headless or headful mode.
+
+        Returns:
+            WebDriver instance.
+        """
         chrome_options = webdriver.ChromeOptions()
 
-        # load or create a unique chrome profile for this webdriver instance
+        # Load or create a unique Chrome profile for this webdriver instance:
+        # The base scraper that is initialized when the program starts has process id 0 ("p0")
+        # All parallel scrapers copy the base scraper's Chrome profile to skip Duo Mobile login (using saved cookies)
         profile_name = hashlib.sha256(self.user.username.encode('utf-8')).hexdigest()
         profile_path = os.path.dirname(os.path.realpath(__file__)) + f"\\Profiles\\{profile_name}"
         profile_instance_path = profile_path + f"\\p{process_id}"
         if not os.path.exists(profile_instance_path):
-            if process_id == 0:
+            if process_id == 0:  # Base scraper/profile
                 os.makedirs(profile_instance_path)
-            else:
+            else:  # Parallel scraper/profile
                 base_instance_path = profile_path + r"\p0"
                 shutil.copytree(base_instance_path, profile_instance_path)
 
-        # configure and initialize webdriver instance
+        # Configure and initialize the webdriver instance
         chrome_options.add_argument(f"user-data-dir={profile_instance_path}")
         chrome_options.headless = headless
         driver = webdriver.Chrome(options=chrome_options)
@@ -42,41 +58,51 @@ class Scraper:
             driver.set_window_size(1280, 720)  # TODO: set window size relative to monitor resolution, config
         return driver
 
-    # prompts user for calnet login
     # TODO: if duo login times out, script crashes - add try statement and/or loop
     # TODO: account for incorrect login info - loop
-    def login_calnet(self):
+    def login_calnet(self) -> None:
+        """Login to the user's Calnet account (and prompt for credentials if necessary)."""
         if not self.user:
             print('CALNET LOGIN:')
             self.user = User.login_prompt()
 
         WebAutomation.login_calnet(self.driver, self.user)
 
-    # scrapes a work order request with the specified request number
-    # returns a WORequest
     def scrape_request(self, request_id: int) -> WORequest:
+        """Scrape a single work request.
+
+        Args:
+            request_id: The id of the work request.
+
+        Returns:
+            The scraped work request as a WORequest object.
+        """
         WebAutomation.select_request_button(self.driver)
         try:
             return WebAutomation.search_request(self.driver, request_id)
         except:
             return WORequest(request_id)  # return an empty request if request cannot be found
 
-    # return a list of dictionaries containing the driver's current cookies
     def get_cookies(self) -> list[dict]:
+        """Get a list of the webdriver cookies that are currently visible (cookies from the current domain).
+
+        Returns:
+            List of dictionary-representations of cookies.
+        """
         return self.driver.get_cookies()
 
-    # add a list of cookies to the driver
-    def add_cookies(self, cookies: list[dict], lax: bool = True):
+    def add_cookies(self, cookies: list[dict]) -> None:
+        """Add a list of cookies to the webdriver (can only add cookies for the current domain).
+
+        Args:
+            cookies: List of dictionary-representations of cookies
+        """
         for cookie in cookies:
             try:
                 self.driver.add_cookie(cookie)
             except exceptions.InvalidCookieDomainException as e:
                 print(f"failed to add cookie with name [{cookie.get('name')}] (wrong domain)")
 
-    # close this scraper instance
-    def close(self):
+    def close(self) -> None:
+        """Close the webdriver."""
         self.driver.close()
-
-    # TODO: finds the request with the highest id
-    def find_last(self):
-        return None

@@ -7,9 +7,13 @@ import shutil
 
 class Config:
     def __init__(self, path=None):
-        """An ini configuration for the current program with functions to retrieve and modify options at runtime."""
+        """An ini configuration for the current program with functions to retrieve and modify options at runtime.
+
+        Args:
+            path: Path to the config file
+        """
         if path is None:
-            path = os.path.dirname(os.path.realpath(__file__)) + f"\\config.ini"  # TODO: copy default config
+            path = os.path.dirname(os.path.realpath(__file__)) + f"\\config.ini"
         self.path = path
         self.config = configparser.ConfigParser()
         self.config.read(self.path)

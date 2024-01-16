@@ -1,11 +1,11 @@
-# A work order request
-
-from typing import List
-
-
 class WORequest:
-    def __init__(self, number):
-        self.id = number
+    def __init__(self, request_id: int):
+        """A work order request containing all data pertaining to the request.
+
+        Args:
+            request_id: id of the work request.
+        """
+        self.id = request_id
         self.room = None
         self.status = None
         self.building = None
@@ -19,8 +19,10 @@ class WORequest:
         self.area_description = None
         self.requested_action = None
 
-    # returns a list of all datapoints in string format
     def to_list(self) -> list:
+        """Convert this request into an ordered list of all datapoints.
+
+        Returns: List of datapoints in order."""
         return [self.id,
                 self.room,
                 self.status,
@@ -35,7 +37,11 @@ class WORequest:
                 self.area_description,
                 self.requested_action]
 
-    # returns a comma-separated string of all datapoints
     def to_csv(self) -> str:
+        """Return a csv-entry-representation of this work request.
+
+        Returns:
+            Comma-separated string of all datapoints.
+        """
         string_list = [str(datapoint).replace('\n', '\\n') for datapoint in self.to_list()]
         return ','.join(string_list)

@@ -9,7 +9,7 @@ class Log:
         with open(self.filepath, 'w') as log:
             log.write(f"log created at time: {datetime.now()}\n\n")
 
-    def add(self, message: str):
+    def add(self, message: str) -> None:
         """Add a timestamped message to the log and print it to the console.
 
         Args:
@@ -22,6 +22,9 @@ class Log:
 
         Args:
             message: The message to add to the log (excluding timestamp).
+
+        Returns:
+            The timestamped log message.
         """
         output = f"[{datetime.now()}] " + message
 
