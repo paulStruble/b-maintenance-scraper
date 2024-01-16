@@ -1,5 +1,3 @@
-# Utilities for logging runtime information
-
 import logging
 from datetime import datetime
 

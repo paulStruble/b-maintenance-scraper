@@ -1,5 +1,3 @@
-# main driver class to run program from
-
 import multiprocessing
 from collections import defaultdict
 from RequestDB import RequestDB
@@ -29,7 +27,7 @@ class Driver:
         """
         host, dbname, user, password, port = self.config.get_database_args()
 
-        # prompt for database password input if configured to do so
+        # Prompt for database password input if configured to do so
         if self.config.get("Database", "b_input_database_password_at_runtime"):
             if self.password_input_hidden:
                 password = pwinput(prompt="Database Password: ")

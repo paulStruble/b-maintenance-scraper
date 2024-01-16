@@ -1,4 +1,3 @@
-# configurable settings for various program features
 # TODO: remove non-base chrome profiles (take up a lot of storage)
 # TODO: first-time setup
 import configparser
