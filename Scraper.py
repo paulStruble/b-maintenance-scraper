@@ -6,9 +6,10 @@ from selenium.common import exceptions
 from selenium.webdriver.chrome.webdriver import WebDriver
 
 import User
+from WorkOrder import WorkOrder
 from selenium import webdriver
 from WebAutomation import *
-from WORequest import *
+from WorkOrderRequest import *
 from User import *
 
 
@@ -68,20 +69,35 @@ class Scraper:
 
         WebAutomation.login_calnet(self.driver, self.user)
 
-    def scrape_request(self, request_id: int) -> WORequest:
+    def scrape_request(self, request_id: int) -> WorkOrderRequest:
         """Scrape a single work request.
 
         Args:
             request_id: The id of the work request.
 
         Returns:
-            The scraped work request as a WORequest object.
+            The scraped work request as a WorkOrderRequest object.
         """
         WebAutomation.select_request_button(self.driver)
         try:
-            return WebAutomation.search_request(self.driver, request_id)
+            return WebAutomation.scrape_request(self.driver, request_id)
         except:
-            return WORequest(request_id)  # return an empty request if request cannot be found
+            return WorkOrderRequest(request_id)  # Return an empty request if request cannot be found
+
+    def scrape_order(self, order_number: str) -> WorkOrder:
+        """Scrape a single work order.
+
+        Args:
+            order_number: The order number of the work order.
+
+        Returns:
+            The scraped work order as a WorkOrder object.
+        """
+        WebAutomation.select_request_button(self.driver)
+        try:
+            return WebAutomation.scrape_order(self.driver, order_number)
+        except:
+            return WorkOrder(order_number)  # Return an empty work order if none can be found
 
     def get_cookies(self) -> list[dict]:
         """Get a list of the webdriver cookies that are currently visible (cookies from the current domain).

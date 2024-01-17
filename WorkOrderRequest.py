@@ -1,4 +1,4 @@
-class WORequest:
+class WorkOrderRequest:
     def __init__(self, request_id: int):
         """A work order request containing all data pertaining to the request.
 
