@@ -6,7 +6,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 
 from User import User
-from WORequest import WORequest
+from WorkOrder import WorkOrder
+from WorkOrderRequest import WorkOrderRequest
 
 
 class WebAutomation:

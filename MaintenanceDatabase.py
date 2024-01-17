@@ -9,7 +9,7 @@ from User import *
 from typing import Iterable
 
 
-class RequestDB:
+class MaintenanceDatabase:
     def __init__(self, log: Log, calnet_user: User, host: str, dbname: str, user: str, password: str, port: int,
                  process_id: int = 0, headless=True):
         """A connection to a PostgreSQL database with utilities to add work order request data.

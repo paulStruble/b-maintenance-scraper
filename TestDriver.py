@@ -1,7 +1,7 @@
 # an independent driver class solely for testing and debugging purposes
 # TODO: test class - write JUnit tests - test features on a series of random work requests
 import multiprocessing
-from RequestDB import RequestDB
+from MaintenanceDatabase import MaintenanceDatabase
 from Scraper import *
 #
 # scraper = Scraper()

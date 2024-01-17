@@ -1,6 +1,6 @@
 import multiprocessing
 from collections import defaultdict
-from RequestDB import RequestDB
+from MaintenanceDatabase import MaintenanceDatabase
 from Scraper import *
 from Log import *
 from Config import *
@@ -17,7 +17,7 @@ class Driver:
 
         self.database = self.connect_primary_database()
 
-    def connect_primary_database(self) -> RequestDB:
+    def connect_primary_database(self) -> MaintenanceDatabase:
         """Connect to the database (database connection information and credentials are stored in the config).
         Note:
             This function should only be used to connect to the DRIVER'S database (NOT for parallel processes).
@@ -35,8 +35,8 @@ class Driver:
                 password = input("Database Password: ")
 
         headless = self.config.get("Scraper", "b_primary_scraper_headless")  # For primary scraper only
-        database = RequestDB(log=self.log, calnet_user=self.user, host=host, dbname=dbname, user=user,
-                             password=password, port=port, headless=headless)
+        database = MaintenanceDatabase(log=self.log, calnet_user=self.user, host=host, dbname=dbname, user=user,
+                                       password=password, port=port, headless=headless)
         return database
 
     def main_menu(self) -> None:
@@ -99,8 +99,8 @@ class Driver:
             db_args: Tuple of arguments to connect to the database.
         """
         host, dbname, user, password, port = db_args
-        database = RequestDB(log=log, calnet_user=calnet_user, process_id=process_id, headless=headless, host=host,
-                             dbname=dbname, user=user, password=password, port=port)
+        database = MaintenanceDatabase(log=log, calnet_user=calnet_user, process_id=process_id, headless=headless, host=host,
+                                       dbname=dbname, user=user, password=password, port=port)
 
         database.add_requests(request_ids)
         database.close()
