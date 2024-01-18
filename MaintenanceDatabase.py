@@ -63,7 +63,7 @@ class MaintenanceDatabase:
         """
         try:
             # Skip this request if an entry with the same id already exists
-            select_query = f"SELECT * FROM requests WHERE id = {request_id}"
+            select_query = f"SELECT 1 FROM requests WHERE id = {request_id}"
             self.cursor.execute(select_query)
             if self.cursor.fetchone():
                 self.log.add(f"entry with id [{request_id}] already exists ... skipping this insert request")
