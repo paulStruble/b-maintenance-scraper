@@ -41,8 +41,8 @@ class Driver:
 
     def main_menu(self) -> None:
         """Run the main menu loop with options to navigate the program."""
-        options = [1, 2, 3]
-        exit_value = 3
+        options = [1, 2, 3, 4]
+        exit_value = 4
         choice = None
 
         # Main menu loop
@@ -50,8 +50,9 @@ class Driver:
             print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
             print("\nOptions:\n\n"
                   "1. Scrape a range of work order requests and write to your database\n"
-                  "2. Settings\n"
-                  "3. Exit\n")
+                  "2. Scrape a range of work orders and write to your database\n"
+                  "3. Settings\n"
+                  "4. Exit\n")
             print('-' * (shutil.get_terminal_size().columns - 1))
 
             while choice not in options:
@@ -62,9 +63,11 @@ class Driver:
                     self.scrape_range_prompt()
                     choice = None
                 case 2:
+                    pass  # TODO: work order implementation in Driver
+                case 3:
                     self.config.settings_menu()
                     choice = None
-                case 3:
+                case 4:
                     return None
 
     def scrape_range_prompt(self) -> None:
