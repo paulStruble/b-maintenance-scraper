@@ -4,6 +4,7 @@ from MaintenanceDatabase import MaintenanceDatabase
 from Scraper import *
 from Log import *
 from Config import *
+from User import login_prompt
 
 
 class Driver:
@@ -13,7 +14,7 @@ class Driver:
         self.config = Config()  # Config object to load the program's settings
         self.log = Log()  # Log object to track progress and error codes
         self.password_input_hidden = self.config.get("Options", "b_password_inputs_hidden")
-        self.user = User.login_prompt(hidden=self.password_input_hidden)  # Log into the user's Calnet profile
+        self.user = login_prompt(hidden=self.password_input_hidden)  # Log into the user's Calnet profile
 
         self.database = self.connect_primary_database()
 
