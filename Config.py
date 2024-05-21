@@ -45,10 +45,10 @@ class Config:
 
     def get_database_args(self) -> tuple[str, str, str, str, int]:
         """Retrieve a tuple of arguments from the config to initialize a database connection (used to initialize a
-        RequestDB object). Note that initializing a RequestDB object still requires other arguments.
+        MaintenanceDatabase object). Note that initializing a MaintenanceDatabase object still requires other arguments.
 
         Returns:
-            A tuple of arguments from the config to initialize a RequestDB object.
+            A tuple of arguments from the config to initialize a MaintenanceDatabase object.
         """
         host = self.config.get('Database', 's_host')
         dbname = self.config.get('Database', 's_name')
