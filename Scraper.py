@@ -1,12 +1,8 @@
 import hashlib
 import os
-import shutil
-
+from pathlib import Path
 from selenium.common import exceptions
-from selenium.webdriver.chrome.webdriver import WebDriver
-
 import User
-from WorkOrder import WorkOrder
 from selenium import webdriver
 from WebAutomation import *
 from WorkOrderRequest import *
@@ -37,23 +33,26 @@ class Scraper:
             WebDriver instance.
         """
         chrome_options = webdriver.ChromeOptions()
+        if headless:
+            chrome_options.add_argument("--headless")
 
         # Load or create a unique Chrome profile for this webdriver instance:
         # The base scraper that is initialized when the program starts has process id 0 ("p0")
         # All parallel scrapers copy the base scraper's Chrome profile to skip Duo Mobile login (using saved cookies)
         profile_name = hashlib.sha256(self.user.username.encode('utf-8')).hexdigest()
-        profile_path = os.path.dirname(os.path.realpath(__file__)) + f"\\Profiles\\{profile_name}"
-        profile_instance_path = profile_path + f"\\p{process_id}"
+        profile_path = Path.cwd() / 'Profiles' / f'{profile_name}'
+        profile_instance_path = profile_path / f'p{process_id}'
         if not os.path.exists(profile_instance_path):
             if process_id == 0:  # Base scraper/profile
                 os.makedirs(profile_instance_path)
             else:  # Parallel scraper/profile
-                base_instance_path = profile_path + r"\p0"
+                base_instance_path = profile_path / 'p0'
                 shutil.copytree(base_instance_path, profile_instance_path)
 
         # Configure and initialize the webdriver instance
         chrome_options.add_argument(f"user-data-dir={profile_instance_path}")
-        chrome_options.headless = headless
+
+        # Initialize driver
         driver = webdriver.Chrome(options=chrome_options)
         if not headless:
             driver.set_window_size(1280, 720)  # TODO: set window size relative to monitor resolution, config
