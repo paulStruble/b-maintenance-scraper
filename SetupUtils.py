@@ -94,7 +94,7 @@ class SetupUtils:
                         print(f"Download link for [{item}] version [{version}]: {url}")
                         return url
 
-        raise ValueError(f"Invalid version: {version} ... for a list of all supported versions visit: {endpoint}")
+        raise ValueError()
 
     @staticmethod
     def get_latest_download_link(item: str, channel='Stable', user_platform='win64') -> tuple[str, str]:
@@ -174,9 +174,21 @@ class SetupUtils:
             try:
                 SetupUtils.download_browser_items(version=version_in, user_platform=user_platform)
                 return version_in  # Exit the loop if the version is valid and installation succeeds
-            except ValueError as e:
+            except (ValueError, KeyError) as e:
                 print(e)
-                print("Please try again.")
+                endpoint = SetupUtils._chrome_for_testing_url + SetupUtils._known_good_versions_with_downloads
+                print(f"Invalid version: {version_in} ... for a list of all supported versions visit: {endpoint}\n"
+                      "Ensure version has downloads for both chrome AND chromedriver.")
+
+                # Remove partial versions if present
+                version_dash = version_in.replace('.', '-')
+                version_dir = SetupUtils._browser_path / version_dash
+                if version_dir.exists():
+                    try:
+                        shutil.rmtree(version_dir)
+                        print(f"Directory {version_dir} removed successfully.")
+                    except OSError as e:
+                        print(f"Error removing directory {version_dir}: {e}")
 
     # TODO: last working version option, config update
     @staticmethod
