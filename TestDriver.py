@@ -1,5 +1,14 @@
 # an independent driver class solely for testing and debugging purposes
 # TODO: test class - write JUnit tests - test features on a series of random work requests
+# TODO: input validation (all inputs)
+# TODO: chrome, chromedriver installations and refactor to relative paths
+# TODO: setup - required libraries, chrome install, chromedriver install,
+# TODO: better typechecking, remove inappropriate default args
+# TODO: documentation cleanup - consistency in comment formatting, comments where appropriate
+# TODO: remove classes where necessary (maybe for utils) - convert class modules to just function modules
+# TODO: move module/class variables to config
+# TODO: include in docs: custom chrome/chromedriver version install (manual install to filepath)
+# TODO: option to update chrome version
 import multiprocessing
 from MaintenanceDatabase import MaintenanceDatabase
 from Scraper import *
