@@ -65,6 +65,38 @@ class SetupUtils:
                 case 5: return "win64"
 
     @staticmethod
+    def get_download_link(item: str, version: str, user_platform='win64') -> str:
+        """Fetches the download link for specified version of the given item.
+
+        Args:
+            item: The download link to fetch (e.g. 'chrome', 'chromedriver', etc.)
+            version: Version number of the item to download.
+            user_platform: Current user platform (operating system).
+
+        Returns:
+            Download link for specified version of the given item.
+
+        Raises:
+            ValueError: If the version is not supported.
+        """
+        print(f"Fetching download link for [{item}] version [{version}] on [{user_platform}] ...")
+        endpoint = SetupUtils._chrome_for_testing_url + SetupUtils._known_good_versions_with_downloads
+        response = requests.get(endpoint)
+        response.raise_for_status()
+        versions_json = response.json()  # JSON object of all latest versions
+
+        # Find matching version and return
+        for curr_version in versions_json['versions']:
+            if curr_version['version'] == version:
+                for download in curr_version['downloads'][item]:
+                    if download['platform'] == user_platform:
+                        url = download['url']
+                        print(f"Download link for [{item}] version [{version}]: {url}")
+                        return url
+
+        raise ValueError(f"Invalid version: {version} ... for a list of all supported versions visit: {endpoint}")
+
+    @staticmethod
     def get_latest_download_link(item: str, channel='Stable', user_platform='win64') -> tuple[str, str]:
         """Fetch the version number and download link for the latest version of the given item.
 
@@ -77,8 +109,8 @@ class SetupUtils:
             Tuple of ([latest version], [link to download])
         """
         print(f"Fetching download link for latest [{channel}] [{user_platform}] version of [{item}] ...")
-        response = requests.get(SetupUtils._chrome_for_testing_url +
-                                SetupUtils._last_known_good_versions_with_downloads)
+        endpoint = SetupUtils._chrome_for_testing_url + SetupUtils._last_known_good_versions_with_downloads
+        response = requests.get(endpoint)
         response.raise_for_status()
         latest_json = response.json()  # JSON object of all latest versions
         version = latest_json['channels'][channel]['version']
@@ -93,10 +125,11 @@ class SetupUtils:
 
     # TODO: update config with paths to chrome, chromedriver? - maybe just add options and set to default
     @staticmethod
-    def download_browser_items(download_dir=_browser_path, channel='Stable', user_platform='win64') -> str:
+    def download_browser_items(version=None, download_dir=_browser_path, channel='Stable', user_platform='win64') -> str:
         """Download and unzip latest Chrome and chromedriver versions to the specified directory.
 
         Args:
+            version: Version of items to be downloaded (None for latest version).
             download_dir: Directory to download files to.
             channel: Channel to download (e.g. 'Stable', 'Beta', etc.).
             user_platform: Current user platform (operating system).
@@ -106,7 +139,10 @@ class SetupUtils:
         """
         # Download items
         for item in ('chrome', 'chromedriver'):
-            version, url = SetupUtils.get_latest_download_link(item, channel=channel, user_platform=user_platform)
+            if version is None:
+                version, url = SetupUtils.get_latest_download_link(item, channel=channel, user_platform=user_platform)
+            else:
+                url = SetupUtils.get_download_link(item, version, user_platform=user_platform)
 
             version_dash = version.replace('.', '-')  # Rename version number for filename compatibility
 
@@ -130,6 +166,17 @@ class SetupUtils:
                 print(f"Extraction complete.")
 
         return version_dash
+
+    @staticmethod
+    def version_prompt(user_platform):
+        while True:
+            version_in = input("Please enter the version number to download and install: ")
+            try:
+                SetupUtils.download_browser_items(version=version_in, user_platform=user_platform)
+                return version_in  # Exit the loop if the version is valid and installation succeeds
+            except ValueError as e:
+                print(e)
+                print("Please try again.")
 
     # TODO: last working version option, config update
     @staticmethod
@@ -159,7 +206,9 @@ class SetupUtils:
             case 2: curr_version = SetupUtils.download_browser_items(channel='Beta', user_platform=user_platform)
             case 3: curr_version = SetupUtils.download_browser_items(channel='Dev', user_platform=user_platform)
             case 4: curr_version = SetupUtils.download_browser_items(channel='Canary', user_platform=user_platform)
-            case 5: pass  # TODO: specific version support
+            case 5: curr_version = SetupUtils.version_prompt(user_platform)
+
+        # TODO: update config (option)
 
 
 if __name__ == '__main__':
