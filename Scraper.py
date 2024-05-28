@@ -10,6 +10,9 @@ from User import *
 
 
 class Scraper:
+    # _chrome_path = Path.cwd() / 'Browser' # TODO: relative chrome path
+    # _chromedriver_path = Path.cwd() / 'Browser' / 'chromedriver-win64' / 'chromedriver.exe' # TODO: relative chromedriver path
+
     def __init__(self, user: User = None, process_id: int = 0, headless: bool = True):
         """An automated webscraper for retrieving work order request data.
 
@@ -32,6 +35,8 @@ class Scraper:
         Returns:
             WebDriver instance.
         """
+
+        # chrome_service = webdriver.ChromeService(executable_path=Scraper._chromedriver_path)
         chrome_options = webdriver.ChromeOptions()
         if headless:
             chrome_options.add_argument("--headless")
@@ -48,11 +53,10 @@ class Scraper:
             else:  # Parallel scraper/profile
                 base_instance_path = profile_path / 'p0'
                 shutil.copytree(base_instance_path, profile_instance_path)
-
-        # Configure and initialize the webdriver instance
         chrome_options.add_argument(f"user-data-dir={profile_instance_path}")
 
         # Initialize driver
+        # driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
         driver = webdriver.Chrome(options=chrome_options)
         if not headless:
             driver.set_window_size(1280, 720)  # TODO: set window size relative to monitor resolution, config
