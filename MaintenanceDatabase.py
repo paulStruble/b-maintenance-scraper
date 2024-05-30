@@ -1,9 +1,6 @@
-import math
-from selenium import webdriver
 import psycopg2
 from Scraper import *
 from Log import *
-import multiprocessing
 import traceback
 from User import *
 from typing import Iterable
