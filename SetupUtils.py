@@ -1,4 +1,5 @@
 import shutil
+import subprocess
 import zipfile
 from pathlib import Path
 import requests
@@ -11,6 +12,23 @@ class SetupUtils:
     _last_known_good_versions_with_downloads = "last-known-good-versions-with-downloads.json"
     _known_good_versions_with_downloads = "known-good-versions-with-downloads.json"
     _browser_path = Path.cwd() / 'Browser'
+
+    @staticmethod
+    def install_required_packages(path='requirements.txt'):
+        try:
+            # Open requirements file.
+            with open(path, 'r') as f:
+                # Read list of required packages.
+                packages = f.read().splitlines()
+
+            # Iterate over each package and install it.
+            for package in packages:
+                print(f"Installing [{package}] ...")
+                subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+                print(f"[{package}] installation complete")
+            print("All packages installed successfully.")
+        except Exception as e:
+            print(f"An error occurred while trying to install packages: {e}")
 
     @staticmethod
     def get_platform() -> str:
