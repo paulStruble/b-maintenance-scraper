@@ -1,4 +1,4 @@
-TODO:
-libraries
-chrome (and relative path)
-chromedriver (and relative path)
+psycopg2==2.9.9
+pwinput==1.0.3
+pytest==8.2.1
+Requests==2.32.3
