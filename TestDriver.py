@@ -2,7 +2,7 @@
 # TODO: test class - write JUnit tests - test features on a series of random work requests
 # TODO: input validation (all inputs)
 # TODO: chrome, chromedriver installations and refactor to relative paths
-# TODO: setup - required libraries, chrome install, chromedriver install,
+# TODO: setup - required libraries, chrome install, chromedriver install, postgres
 # TODO: better typechecking, remove inappropriate default args
 # TODO: documentation cleanup - consistency in comment formatting, comments where appropriate
 # TODO: remove classes where necessary (maybe for utils) - convert class modules to just function modules
