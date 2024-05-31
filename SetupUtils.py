@@ -5,6 +5,7 @@ from pathlib import Path
 import requests
 import platform
 import sys
+from Config import Config
 
 
 class SetupUtils:
@@ -14,7 +15,13 @@ class SetupUtils:
     _browser_path = Path.cwd() / 'Browser'
 
     @staticmethod
-    def install_required_packages(path='requirements.txt'):
+    def install_required_packages(path='requirements.txt') -> None:
+        """ Automatically install all required packages from the specified requirements file.
+
+        Args:
+            path: path to requirements.txt file (optional)
+        """
+        print(f'Installing required packages from {path}:')
         try:
             # Open requirements file.
             with open(path, 'r') as f:
@@ -186,7 +193,12 @@ class SetupUtils:
         return version_dash
 
     @staticmethod
-    def version_prompt(user_platform):
+    def custom_browser_install_prompt(user_platform):
+        """Prompt the user for chrome and chromedriver installation (for a user-specified version of chrome).
+
+        Args:
+            user_platform: Current user platform (operating system).
+        """
         while True:
             version_in = input("Please enter the version number to download and install: ")
             try:
@@ -208,10 +220,16 @@ class SetupUtils:
                     except OSError as e:
                         print(f"Error removing directory {version_dir}: {e}")
 
-    # TODO: last working version option, config update
+    # TODO: last working version option
     @staticmethod
     def browser_install_prompt():
-        """Prompt the user for Chrome and chromedriver installation."""
+        """Prompt the user for Chrome and chromedriver installation.
+
+        Returns:
+            String version number of chrome/chromedriver (e.g. "125-0-6422-78") if the user decides to install Chrome
+            and chromedriver through this prompt.
+            None if the user decides to do a manual install.
+        """
         options = [1, 2, 3, 4, 5]
         choice = None
 
@@ -224,7 +242,8 @@ class SetupUtils:
               "2. Beta\n"
               "3. Dev\n"
               "4. Canary\n"
-              "5. Specific Version")  # TODO: specific version support
+              "5. Specific Version\n"
+              "6. Manual Installation (see readme for instructions)")
         print('-' * (shutil.get_terminal_size().columns - 1))
 
         while choice not in options:
@@ -232,14 +251,50 @@ class SetupUtils:
 
         user_platform = SetupUtils.get_platform()
         match choice:
-            case 1: curr_version = SetupUtils.download_browser_items(channel='Stable', user_platform=user_platform)
-            case 2: curr_version = SetupUtils.download_browser_items(channel='Beta', user_platform=user_platform)
-            case 3: curr_version = SetupUtils.download_browser_items(channel='Dev', user_platform=user_platform)
-            case 4: curr_version = SetupUtils.download_browser_items(channel='Canary', user_platform=user_platform)
-            case 5: curr_version = SetupUtils.version_prompt(user_platform)
+            case 1: return SetupUtils.download_browser_items(channel='Stable', user_platform=user_platform)
+            case 2: return SetupUtils.download_browser_items(channel='Beta', user_platform=user_platform)
+            case 3: return SetupUtils.download_browser_items(channel='Dev', user_platform=user_platform)
+            case 4: return SetupUtils.download_browser_items(channel='Canary', user_platform=user_platform)
+            case 5: return SetupUtils.custom_browser_install_prompt(user_platform)
+            case 6:
+                # Manual Installation
+                print("To manually install Chrome and chromedriver, please see readme for instructions.\n"
+                      "Once your manual installation is complete, input \"COMPLETE\" below to continue:\n")
+                user_in = None
+                while user_in.lower() != 'complete':
+                    user_in = input('Input: ')
 
-        # TODO: update config (option)
+    @staticmethod
+    def first_time_setup(config: Config):
+        """Runs a first-time setup to install dependencies.
+
+        Args:
+            config: Config object to edit/update as settings are changed.
+        """
+        print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
+        print("FIRST-TIME SETUP:\n")
+
+        # Stage 1: Install Python package dependencies from requirements.txt.
+        SetupUtils.install_required_packages()
+
+        # Stage 2: Install Chrome and chromedriver.
+        installed_version = SetupUtils.browser_install_prompt()
+        # Write version number to config
+        if installed_version is not None:
+            config.set('Scraper', 's_chrome_version', installed_version)
+
+        # Stage 3: Postgres Setup
+        print("Please set up and connect a Postgres database as explained in the readme before moving forward.\n"
+              "Once you have set up and connected your Postgres database, input \"COMPLETE\" below to continue:\n")
+        user_in = None
+        # Also ensure b_database_setup_complete is set to 'true' in config
+        while user_in.lower() != 'complete' and not config.get('Database', 'b_database_setup_complete'):
+            user_in = input('Input: ')
+
+        config.set('Program-variables', 'b_first_time_setup_complete', 'true')
+        print("FIRST-TIME SETUP COMPLETE")
+        print('-' * (shutil.get_terminal_size().columns - 1))
 
 
 if __name__ == '__main__':
-    SetupUtils.browser_install_prompt()
+    SetupUtils.first_time_setup(Config())
