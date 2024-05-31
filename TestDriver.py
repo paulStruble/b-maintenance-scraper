@@ -16,6 +16,7 @@
 # TODO: update SetupUtils instructions for postgres/chrome installs with relevant readme sections/references
 # TODO: catch WAAAAYYYY more errors
 # TODO: manual first time setup - parallel process count (and go through all other config options)
+# TODO: logging (maybe automatically log all console output/input (except login info)
 import multiprocessing
 from MaintenanceDatabase import MaintenanceDatabase
 from Scraper import *
