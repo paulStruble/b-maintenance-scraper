@@ -21,7 +21,7 @@ class SetupUtils:
         Args:
             path: path to requirements.txt file (optional)
         """
-        print(f'Installing required packages from {path}:')
+        print(f'Installing required packages from {path}:\n')
         try:
             # Open requirements file.
             with open(path, 'r') as f:
@@ -228,9 +228,9 @@ class SetupUtils:
         Returns:
             String version number of chrome/chromedriver (e.g. "125-0-6422-78") if the user decides to install Chrome
             and chromedriver through this prompt.
-            None if the user decides to do a manual install.
+            None if the user decides to do a manual installation.
         """
-        options = [1, 2, 3, 4, 5]
+        options = [1, 2, 3, 4, 5, 6]
         choice = None
 
         # Browser install menu
@@ -260,7 +260,7 @@ class SetupUtils:
                 # Manual Installation
                 print("To manually install Chrome and chromedriver, please see readme for instructions.\n"
                       "Once your manual installation is complete, input \"COMPLETE\" below to continue:\n")
-                user_in = None
+                user_in = ''
                 while user_in.lower() != 'complete':
                     user_in = input('Input: ')
 
@@ -281,18 +281,23 @@ class SetupUtils:
         installed_version = SetupUtils.browser_install_prompt()
         # Write version number to config
         if installed_version is not None:
-            config.set('Scraper', 's_chrome_version', installed_version)
+            config.set('Scraper', 's_chrome_version', installed_version, save=True)
+        else:
+            config.reload()  # Need to reload config if a manual update was made to s_chrome_version
 
         # Stage 3: Postgres Setup
+        print('-' * (shutil.get_terminal_size().columns - 1))
         print("Please set up and connect a Postgres database as explained in the readme before moving forward.\n"
               "Once you have set up and connected your Postgres database, input \"COMPLETE\" below to continue:\n")
-        user_in = None
-        # Also ensure b_database_setup_complete is set to 'true' in config
-        while user_in.lower() != 'complete' and not config.get('Database', 'b_database_setup_complete'):
+        user_in = ''
+        database_setup_complete = False  # Ensure b_database_setup_complete is set to 'true' in config
+        while user_in.lower() != 'complete' or not database_setup_complete:
             user_in = input('Input: ')
+            config.reload()  # Need to reload config if a manual update was made to b_database_setup_complete
+            database_setup_complete = config.get('Database', 'b_database_setup_complete')
 
-        config.set('Program-variables', 'b_first_time_setup_complete', 'true')
-        print("FIRST-TIME SETUP COMPLETE")
+        config.set('Program-Variables', 'b_first_time_setup_complete', 'true', save=True)
+        print("\nFIRST-TIME SETUP COMPLETE")
         print('-' * (shutil.get_terminal_size().columns - 1))
 
 
