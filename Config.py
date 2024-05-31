@@ -1,7 +1,6 @@
 # TODO: remove non-base chrome profiles (take up a lot of storage)
 # TODO: first-time setup
 import configparser
-import os
 import shutil
 from pathlib import Path
 
@@ -58,15 +57,18 @@ class Config:
         port = self.config.get('Database', 'i_port')
         return host, dbname, user, password, port
 
-    def set(self, section, option, value) -> None:
-        """Update an option in the config. Does not save the change.
+    def set(self, section, option, value, save=False) -> None:
+        """Update an option in the config. Does not save the change by default.
 
         Args:
             section: The section of the option to update.
             option: The specific option to update.
             value: The new value to set the option to.
+            save: Whether to write the changes immediately or not.
         """
         self.config[section][option] = value
+        if save:
+            self.save()
 
     def save(self) -> None:
         """Save and write changes made to the config."""
@@ -74,8 +76,8 @@ class Config:
             self.config.write(config_file)
         self.config.read(self.path)  # Update the currently loaded config to account for change
 
-    def revert(self) -> None:
-        """Cancel changes made to the config (before they have been saved/written)."""
+    def reload(self) -> None:
+        """Reload config settings from disk."""
         self.config.read(self.path)
 
     def print_settings(self) -> None:
