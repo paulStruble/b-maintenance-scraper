@@ -148,7 +148,6 @@ class SetupUtils:
                 print(f"Download link for [{item}] version [{version}]: {url}")
                 return version, url
 
-    # TODO: update config with paths to chrome, chromedriver? - maybe just add options and set to default
     @staticmethod
     def download_browser_items(version=None, download_dir=_browser_path, channel='Stable', user_platform='win64') -> str:
         """Download and unzip latest Chrome and chromedriver versions to the specified directory.
