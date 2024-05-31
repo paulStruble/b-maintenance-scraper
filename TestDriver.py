@@ -6,9 +6,16 @@
 # TODO: better typechecking, remove inappropriate default args
 # TODO: documentation cleanup - consistency in comment formatting, comments where appropriate
 # TODO: remove classes where necessary (maybe for utils) - convert class modules to just function modules
+# TODO: cleanup - "final variables"
 # TODO: move module/class variables to config
 # TODO: include in docs: custom chrome/chromedriver version install (manual install to filepath)
 # TODO: option to update chrome version
+# TODO: readme/documentation instructions for manual chrome/chromedriver install (install + config edit)
+# TODO: readme/documentation instructions for postgres setup (MUST MANUALLY CHANGE b_database_setup_complete)
+# TODO: ensure config path works for windows AND unix
+# TODO: update SetupUtils instructions for postgres/chrome installs with relevant readme sections/references
+# TODO: catch WAAAAYYYY more errors
+# TODO: manual first time setup - parallel process count (and go through all other config options)
 import multiprocessing
 from MaintenanceDatabase import MaintenanceDatabase
 from Scraper import *
