@@ -5,6 +5,7 @@ from Scraper import *
 from Log import *
 from Config import *
 from User import login_prompt
+from SetupUtils import SetupUtils
 
 
 class Driver:
@@ -13,6 +14,11 @@ class Driver:
         when run with <driver>.run()"""
         self.config = Config()  # Config object to load the program's settings
         self.log = Log()  # Log object to track progress and error codes
+
+        # First-time setup
+        if not self.config.get('Program-Variables', 'b_first_time_setup_complete'):
+            SetupUtils.first_time_setup(self.config)
+
         self.password_input_hidden = self.config.get("Options", "b_password_inputs_hidden")
         self.user = login_prompt(hidden=self.password_input_hidden)  # Log into the user's Calnet profile
 
