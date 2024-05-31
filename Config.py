@@ -3,6 +3,7 @@
 import configparser
 import os
 import shutil
+from pathlib import Path
 
 
 class Config:
@@ -13,7 +14,7 @@ class Config:
             path: Path to the config file
         """
         if path is None:
-            path = os.path.dirname(os.path.realpath(__file__)) + f"\\config.ini"
+            path = Path.cwd() / 'config.ini'
         self.path = path
         self.config = configparser.ConfigParser()
         self.config.read(self.path)
