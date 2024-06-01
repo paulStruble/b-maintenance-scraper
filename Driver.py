@@ -149,6 +149,24 @@ class Driver:
             pool.starmap(Driver.add_request_range_parallel_helper, args)
         self.database = self.connect_primary_database()
 
+    def get_chrome_dir(self) -> Path:
+        """Get the path to the director of the currently-enabled Chrome version (e.g. chrome-win64).
+
+            Returns: Path object pointing to the Chrome directory.
+        """
+        chrome_version = self.config.get('Scraper', 's_chrome_version')
+        chrome_platform = self.config.get('Scraper', 's_chrome_platform')
+        return Path.cwd() / 'Browser' / chrome_version / ('chrome-' + chrome_platform)
+
+    def get_chromedriver_dir(self) -> Path:
+        """Get the path to the directory of the currently-enabled chromedriver version (e.g. chromedriver-win64).
+
+            Returns: Path object pointing to the chromedriver directory.
+        """
+        chrome_version = self.config.get('Scraper', 's_chrome_version')
+        chrome_platform = self.config.get('Scraper', 's_chrome_platform')
+        return Path.cwd() / 'Browser' / chrome_version / ('chromedriver-' + chrome_platform)
+
     def run(self):
         """Run this driver. Load and display the main menu."""
         self.main_menu()
