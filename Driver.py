@@ -6,6 +6,7 @@ from Log import *
 from Config import *
 from User import login_prompt
 from SetupUtils import SetupUtils
+from pathlib import Path
 
 
 class Driver:
@@ -42,8 +43,10 @@ class Driver:
                 password = input("Database Password: ")
 
         headless = self.config.get("Scraper", "b_primary_scraper_headless")  # For primary scraper only
-        database = MaintenanceDatabase(log=self.log, calnet_user=self.user, host=host, dbname=dbname, user=user,
-                                       password=password, port=port, headless=headless)
+        database = MaintenanceDatabase(log=self.log, chrome_path=self.get_chrome_dir(),
+                                       chromedriver_path=self.get_chromedriver_dir(), calnet_user=self.user,
+                                       host=host, dbname=dbname, user=user, password=password, port=port,
+                                       headless=headless)
         return database
 
     def main_menu(self) -> None:
@@ -93,8 +96,8 @@ class Driver:
         print(f"Finished scraping requests from ids [{start}] to [{stop}]")
 
     @staticmethod
-    def add_request_range_parallel_helper(request_ids: list, log: Log, calnet_user: User, process_id: int,
-                                          headless: bool, db_args: tuple) -> None:
+    def add_request_range_parallel_helper(request_ids: list, log: Log, chrome_path: Path, chromedriver_path: Path,
+                                          calnet_user: User, process_id: int, headless: bool, db_args: tuple) -> None:
         """Initialize and run a single process for scraping work order requests and adding them to a database.
 
         A new database object is created for every process to establish a unique connection and scraper as psycopg2
@@ -103,13 +106,16 @@ class Driver:
         Args:
             request_ids: List of work order request ids to be scraped/added by this process.
             log: Log object for recording progress and error messages.
+            chrome_path: Path pointing to the chrome directory to be used for Scrapers.
+            chromedriver_path: Path pointing to the chromedriver directory to be used for Scrapers.
             calnet_user: Calnet user used to log into maintenance.housing.berkeley.edu.
             process_id: Unique integer id used assigned to this specific process.
             headless: Whether this process should be run in a headless or headful browser.
             db_args: Tuple of arguments to connect to the database.
         """
         host, dbname, user, password, port = db_args
-        database = MaintenanceDatabase(log=log, calnet_user=calnet_user, process_id=process_id, headless=headless, host=host,
+        database = MaintenanceDatabase(log=log, chrome_path=chrome_path, chromedriver_path=chromedriver_path,
+                                       calnet_user=calnet_user, process_id=process_id, headless=headless, host=host,
                                        dbname=dbname, user=user, password=password, port=port)
 
         database.add_requests(request_ids)
@@ -125,6 +131,8 @@ class Driver:
             headless: Whether processes should be run in a headless or headful browsers
         """
         log = self.log
+        chrome_path = self.get_chrome_dir()
+        chromedriver_path = self.get_chromedriver_dir()
         calnet_user = self.user
         db_args = self.database.db_args
 
@@ -140,7 +148,8 @@ class Driver:
         args = []
         for process_id in range(num_processes):
             request_ids = id_dict[process_id]
-            args.append((request_ids, log, calnet_user, process_id + 1, headless, db_args))
+            args.append((request_ids, log, chrome_path, chromedriver_path, calnet_user, process_id + 1, headless,
+                         db_args))
 
         self.database.close()  # Main scraper needs to be closed to allow for its Chrome profile to be cloned for
         # each parallel process

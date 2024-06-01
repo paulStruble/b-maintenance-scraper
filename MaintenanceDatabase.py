@@ -4,15 +4,18 @@ from Log import *
 import traceback
 from User import *
 from typing import Iterable
+from pathlib import Path
 
 
 class MaintenanceDatabase:
-    def __init__(self, log: Log, calnet_user: User, host: str, dbname: str, user: str, password: str, port: int,
-                 process_id: int = 0, headless=True):
+    def __init__(self, log: Log, chrome_path: Path, chromedriver_path: Path, calnet_user: User, host: str, dbname: str,
+                 user: str, password: str, port: int, process_id: int = 0, headless=True):
         """A connection to a PostgreSQL database with utilities to add work order request data.
 
         Args:
             log: Log object to record progress and errors to.
+            chrome_path: Path pointing to the chrome directory to be used for the Scraper.
+            chromedriver_path: Path pointing to the chromedriver directory to be used for the Scraper.
             calnet_user: User for Calnet login/authorization.
             host: Hostname of the database.
             dbname: Name of the database.
@@ -22,7 +25,8 @@ class MaintenanceDatabase:
             process_id: Unique process id for this database connection (for parallel processing).
             headless: Whether to run the scraper's webdriver in headless or headful mode.
         """
-        self.scraper = Scraper(user=calnet_user, process_id=process_id, headless=headless)
+        self.scraper = Scraper(chrome_path=chrome_path, chromedriver_path=chromedriver_path, user=calnet_user,
+                               process_id=process_id, headless=headless)
         self.log = log
         self.db_name = dbname
         self.db_args = (host, dbname, user, password, port)

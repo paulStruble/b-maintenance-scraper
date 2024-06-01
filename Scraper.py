@@ -13,32 +13,41 @@ class Scraper:
     # _chrome_path = Path.cwd() / 'Browser' # TODO: relative chrome path
     # _chromedriver_path = Path.cwd() / 'Browser' / 'chromedriver-win64' / 'chromedriver.exe' # TODO: relative chromedriver path
 
-    def __init__(self, user: User = None, process_id: int = 0, headless: bool = True):
+    def __init__(self, chrome_path: Path, chromedriver_path: Path, user: User = None, process_id: int = 0,
+                 headless: bool = True):
         """An automated webscraper for retrieving work order request data.
 
         Args:
+            chrome_path: Path pointing to the chrome directory.
+            chromedriver_path: Path pointing to the chromedriver directory.
             user: Calnet user for Calnet login and authorization.
             process_id: Unique process id for this scraper (for parallel processing).
             headless: Whether to run the webdriver in headless or headful mode.
         """
+        self.chrome_path = chrome_path
+        self.chromedriver_path = chromedriver_path
         self.user = user
-        self.driver = self.initialize_driver(process_id=process_id, headless=headless)
+        self.process_id = process_id
+        self.headless = headless
+        self.driver = self.initialize_driver()
         self.login_calnet()
 
-    def initialize_driver(self, process_id, headless) -> WebDriver:
+    def initialize_driver(self) -> WebDriver:
         """Initialize the webdriver instance (chromedriver).
-
-        Args:
-            process_id: Unique process id for this scraper (for parallel processing).
-            headless: Whether to run the webdriver in headless or headful mode.
 
         Returns:
             WebDriver instance.
         """
-
-        # chrome_service = webdriver.ChromeService(executable_path=Scraper._chromedriver_path)
+        chrome_executable_path = str(self.chrome_path / 'chrome.exe')
+        chromedriver_executable_path = str(self.chromedriver_path / 'chromedriver.exe')
+        chrome_service = webdriver.ChromeService(chromedriver_executable_path)  # TODO: might need to cast to str
         chrome_options = webdriver.ChromeOptions()
-        if headless:
+
+        # Set Chrome to correct version (from Browser directory)
+        chrome_options.binary_location = chrome_executable_path
+
+        # Headless mode.
+        if self.headless:
             chrome_options.add_argument("--headless")
 
         # Load or create a unique Chrome profile for this webdriver instance:
@@ -46,9 +55,9 @@ class Scraper:
         # All parallel scrapers copy the base scraper's Chrome profile to skip Duo Mobile login (using saved cookies)
         profile_name = hashlib.sha256(self.user.username.encode('utf-8')).hexdigest()
         profile_path = Path.cwd() / 'Profiles' / f'{profile_name}'
-        profile_instance_path = profile_path / f'p{process_id}'
+        profile_instance_path = profile_path / f'p{self.process_id}'
         if not os.path.exists(profile_instance_path):
-            if process_id == 0:  # Base scraper/profile
+            if self.process_id == 0:  # Base scraper/profile
                 os.makedirs(profile_instance_path)
             else:  # Parallel scraper/profile
                 base_instance_path = profile_path / 'p0'
@@ -56,9 +65,9 @@ class Scraper:
         chrome_options.add_argument(f"user-data-dir={profile_instance_path}")
 
         # Initialize driver
-        # driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
-        driver = webdriver.Chrome(options=chrome_options)
-        if not headless:
+        driver = webdriver.Chrome(options=chrome_options, service=chrome_service)
+        # driver = webdriver.Chrome(options=chrome_options)
+        if not self.headless:
             driver.set_window_size(1280, 720)  # TODO: set window size relative to monitor resolution, config
         return driver
 
