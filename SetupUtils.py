@@ -278,9 +278,11 @@ class SetupUtils:
 
         # Stage 2: Install Chrome and chromedriver.
         installed_version = SetupUtils.browser_install_prompt()
-        # Write version number to config
+        user_platform = SetupUtils.get_platform()
+        # Write version number and platform to config
         if installed_version is not None:
             config.set('Scraper', 's_chrome_version', installed_version, save=True)
+            config.set('Scraper', 's_chrome_platform', user_platform, save=True)
         else:
             config.reload()  # Need to reload config if a manual update was made to s_chrome_version
 
