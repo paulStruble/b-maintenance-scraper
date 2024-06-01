@@ -299,7 +299,6 @@ class SetupUtils:
 
         config.set('Program-Variables', 'b_first_time_setup_complete', 'true', save=True)
         print("\nFIRST-TIME SETUP COMPLETE")
-        print('-' * (shutil.get_terminal_size().columns - 1))
 
 
 if __name__ == '__main__':
