@@ -10,13 +10,14 @@
 # TODO: move module/class variables to config
 # TODO: include in docs: custom chrome/chromedriver version install (manual install to filepath)
 # TODO: option to update chrome version
-# TODO: readme/documentation instructions for manual chrome/chromedriver install (install + config edit)
+# TODO: readme/documentation instructions for manual chrome/chromedriver install (install + s_chrome_version + s_chrome_platform)
 # TODO: readme/documentation instructions for postgres setup (MUST MANUALLY CHANGE b_database_setup_complete)
 # TODO: ensure config path works for windows AND unix
 # TODO: update SetupUtils instructions for postgres/chrome installs with relevant readme sections/references
 # TODO: catch WAAAAYYYY more errors
 # TODO: manual first time setup - parallel process count (and go through all other config options)
 # TODO: logging (maybe automatically log all console output/input (except login info)
+# TODO: may need to include empty Browser and Profiles directories with releases - maybe add if missing (or just ship with)
 import multiprocessing
 from MaintenanceDatabase import MaintenanceDatabase
 from Scraper import *
