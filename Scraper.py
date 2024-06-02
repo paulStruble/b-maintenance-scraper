@@ -10,9 +10,6 @@ from User import *
 
 
 class Scraper:
-    # _chrome_path = Path.cwd() / 'Browser' # TODO: relative chrome path
-    # _chromedriver_path = Path.cwd() / 'Browser' / 'chromedriver-win64' / 'chromedriver.exe' # TODO: relative chromedriver path
-
     def __init__(self, chrome_path: Path, chromedriver_path: Path, user: User = None, process_id: int = 0,
                  headless: bool = True):
         """An automated webscraper for retrieving work order request data.
@@ -90,7 +87,7 @@ class Scraper:
         Returns:
             The scraped work request as a WorkOrderRequest object.
         """
-        WebAutomation.select_request_button(self.driver)
+        WebAutomation.select_item(self.driver, 'WR')
         try:
             return WebAutomation.scrape_request(self.driver, request_id)
         except:
@@ -105,7 +102,7 @@ class Scraper:
         Returns:
             The scraped work order as a WorkOrder object.
         """
-        WebAutomation.select_request_button(self.driver)
+        WebAutomation.select_item(self.driver, 'WO')
         try:
             return WebAutomation.scrape_order(self.driver, order_number)
         except:

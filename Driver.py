@@ -70,46 +70,64 @@ class Driver:
 
             match choice:
                 case 1:
-                    self.scrape_range_prompt()
-                    choice = None
+                    self.scrape_range_prompt(item_type='request')
                 case 2:
-                    pass  # TODO: work order implementation in Driver
+                    order_prefix = self.config.get('Program-Variables', 's_work_order_prefix')
+                    self.scrape_range_prompt(item_type='order', prefix=order_prefix)
                 case 3:
                     self.config.settings_menu()
-                    choice = None
                 case 4:
                     return None
+            choice = None
 
-    def scrape_range_prompt(self) -> None:
-        """Prompt the user to scrape a range of work order requests and add them to the database."""
-        start = max(int(input("start id: ")), 1)  # Inputting 0 causes the program to crash
-        stop = int(input("stop id: "))
+    def scrape_range_prompt(self, item_type: str, prefix: str = "") -> None:
+        """Prompt the user to scrape a range of work order requests or work orders and add them to the database.
+
+        Args:
+            item_type: Type of item to be scraped (either 'request' or 'order').
+            prefix: Prefix to append to work order numbers ("" for requests).
+        """
+        start = int(input(f"start id: {prefix}"))
+        stop = int(input(f"stop id: {prefix}"))
+
+        if item_type == "request":
+            start = max(1, start)  # Inputting 0 causes program to crash
+
         num_processes = self.config.get("Scraper", "i_parallel_process_count")  # Parallel process count
 
-        print(f"Initializing process: scrape and write requests from ids [{start}] to [{stop}] on [{num_processes}] "
-              f"processes")
+        print(f"Initializing process: scrape and write orders from ids [{prefix}{start}] to [{prefix}{stop}] on "
+              f"[{num_processes}] processes")
+
         if num_processes > 1:  # Parallel processing
             headless = self.config.get("Scraper", "b_parallel_scrapers_headless")
-            self.add_request_range_parallel(start, stop, num_processes, headless)
+            self.add_item_range_parallel(item_type, start, stop, num_processes, headless=headless, prefix=prefix)
         else:  # Sequential processing
-            self.database.add_request_range(start, stop)
-        print(f"Finished scraping requests from ids [{start}] to [{stop}]")
+            if item_type == "request":
+                self.database.add_request_range(start, stop)
+            elif item_type == "order":
+                self.database.add_order_range(start, stop, prefix)
+
+        print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
+        print(f"Finished scraping requests from ids [{prefix}{start}] to [{prefix}{stop}]")
 
     @staticmethod
-    def add_request_range_parallel_helper(request_ids: list, log: Log, chrome_path: Path, chromedriver_path: Path,
-                                          calnet_user: User, process_id: int, headless: bool, db_args: tuple) -> None:
+    def add_item_range_parallel_helper(item_type: str, item_ids: list, prefix: str, log: Log, chrome_path: Path,
+                                       chromedriver_path: Path, calnet_user: User, process_id: int, headless: bool,
+                                       db_args: tuple) -> None:
         """Initialize and run a single process for scraping work order requests and adding them to a database.
 
         A new database object is created for every process to establish a unique connection and scraper as psycopg2
         connections and selenium webdrivers cannot be shared between processes.
 
         Args:
-            request_ids: List of work order request ids to be scraped/added by this process.
+            item_type: Type of item to be scraped (either 'request' or 'order').
+            item_ids: List of work order item ids to be scraped/added by this process.
+            prefix: Prefix to append to work order numbers ("" for requests).
             log: Log object for recording progress and error messages.
             chrome_path: Path pointing to the chrome directory to be used for Scrapers.
             chromedriver_path: Path pointing to the chromedriver directory to be used for Scrapers.
             calnet_user: Calnet user used to log into maintenance.housing.berkeley.edu.
-            process_id: Unique integer id used assigned to this specific process.
+            process_id: Unique integer id assigned to this specific process.
             headless: Whether this process should be run in a headless or headful browser.
             db_args: Tuple of arguments to connect to the database.
         """
@@ -118,17 +136,23 @@ class Driver:
                                        calnet_user=calnet_user, process_id=process_id, headless=headless, host=host,
                                        dbname=dbname, user=user, password=password, port=port)
 
-        database.add_requests(request_ids)
+        if item_type == 'request':
+            database.add_requests(item_ids)
+        elif item_type == 'order':
+            database.add_orders(item_ids)
         database.close()
 
-    def add_request_range_parallel(self, start, stop, num_processes, headless=False) -> None:
-        """Scrape and add a range of work order requests to the database (in parallel).
+    def add_item_range_parallel(self, item_type: str, start: int, stop: int, num_processes: int, headless=False,
+                                prefix: str = "") -> None:
+        """Scrape and add a range of work order requests or work orders to the database (in parallel).
 
         Args:
-            start: First work order request id to scrape/add (inclusive)
-            stop: Last work order request id to scrape/add (exclusive)
-            num_processes: number of parallel processes to use
-            headless: Whether processes should be run in a headless or headful browsers
+            item_type: Type of item to be scraped (either 'request' or 'order').
+            start: First item id to scrape/add (inclusive).
+            stop: Last item id to scrape/add (exclusive).
+            num_processes: number of parallel processes to use.
+            headless: Whether processes should be run in a headless or headful browsers.
+            prefix: Prefix to append to work order numbers (leave empty for requests).
         """
         log = self.log
         chrome_path = self.get_chrome_dir()
@@ -136,26 +160,29 @@ class Driver:
         calnet_user = self.user
         db_args = self.database.db_args
 
-        # Uniformly assign requests ids to different processes
-        # A request id is assigned to a process with: <process id> = <request id> (mod <number of processes>)
+        # Uniformly assign item ids to different processes
+        # An item id is assigned to a process with: <process id> = <item id> (mod <number of processes>)
         id_dict = defaultdict(list)
-        for request_id in range(start, stop):
-            process_num = request_id % num_processes
-            id_dict[process_num].append(request_id)
+        for item_id in range(start, stop):
+            process_num = item_id % num_processes
+            if item_type == 'request':
+                id_dict[process_num].append(item_id)
+            elif item_type == 'order':
+                id_dict[process_num].append(prefix + str(item_id))
 
         # Generate a list of argument tuples
-        # Each tuple will be passed to add_request_range_parallel to create a new process
+        # Each tuple will be passed to add_item_range_parallel to create a new process
         args = []
         for process_id in range(num_processes):
-            request_ids = id_dict[process_id]
-            args.append((request_ids, log, chrome_path, chromedriver_path, calnet_user, process_id + 1, headless,
-                         db_args))
+            item_ids = id_dict[process_id]
+            args.append((item_type, item_ids, prefix, log, chrome_path, chromedriver_path, calnet_user,
+                         process_id + 1, headless, db_args))
 
         self.database.close()  # Main scraper needs to be closed to allow for its Chrome profile to be cloned for
         # each parallel process
         del self.database
         with multiprocessing.Pool(processes=num_processes) as pool:
-            pool.starmap(Driver.add_request_range_parallel_helper, args)
+            pool.starmap(Driver.add_item_range_parallel_helper, args)
         self.database = self.connect_primary_database()
 
     def get_chrome_dir(self) -> Path:

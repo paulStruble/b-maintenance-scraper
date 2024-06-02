@@ -42,11 +42,12 @@ class WebAutomation:
                 print('---LOGIN CONFIRMED---')
 
     @staticmethod
-    def select_request_button(driver: WebDriver) -> None:
+    def select_item(driver: WebDriver, item_value: str) -> None:
         """Select "Work Request" from the maintenance tracking dropdown menu.
 
         Args:
             driver: Selenium webdriver instance for automated selection.
+            item_value: Value of item to be selected from dropdown menu ('WR' for Work Request, 'WO' for Work Order).
         """
         try:  # Wait for the sidebar to load # TODO: move into login_calnet if redundant
             driver.switch_to.default_content()
@@ -56,7 +57,7 @@ class WebAutomation:
 
         # Select "Work Request" button
         dropdown_select = Select(driver.find_element(By.XPATH, "//select[@name='Search']"))
-        dropdown_select.select_by_value("WR")
+        dropdown_select.select_by_value(item_value)
 
     @staticmethod
     def search_item(driver: WebDriver, query: str) -> None:
@@ -93,7 +94,6 @@ class WebAutomation:
         except:
             print(f"failed to find element at XPATH: '{xpath}'")
             return None
-
 
     @staticmethod
     def scrape_request(driver: WebDriver, request_id: int) -> WorkOrderRequest:

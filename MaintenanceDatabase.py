@@ -154,7 +154,7 @@ class MaintenanceDatabase:
         """
         try:
             # Skip this request if an entry with the same id already exists
-            select_query = f"SELECT 1 FROM orders WHERE order_number = {order_number}"
+            select_query = f"SELECT 1 FROM orders WHERE order_number = '{order_number}'"
             self.cursor.execute(select_query)
             if self.cursor.fetchone():
                 self.log.add(f"entry with order number [{order_number}] already exists ... skipping this insert "
@@ -182,22 +182,21 @@ class MaintenanceDatabase:
         """Scrape and insert work orders for an iterable of order numbers.
 
         Args:
-            order_numbers: Iterable of order numbers.
+            order_numbers: Iterable of order numbers (WITH PREFIXES).
         """
         for order_number in order_numbers:
             self.add_order(order_number)
 
-    def add_order_range(self, start: int, stop: int, prefix: str = "HM-") -> None:
+    def add_order_range(self, start: int, stop: int, prefix: str = 'HM-') -> None:
         """Scrape and insert a range of work orders into the database.
 
         Args:
             start: First order number to scrape and insert (inclusive).
             stop: Last order number to scrape and insert (exclusive).
-            prefix: String to append the beginning of each integer work order number (default is "HM-").
+            prefix: String to append the beginning of each integer work order number.
         """
         for int_order_number in range(start, stop):
-            order_number = prefix + str(int_order_number)
-            self.add_order(order_number)
+            self.add_order(prefix + str(int_order_number))
 
     def close(self) -> None:
         """Close the connection to the database."""
