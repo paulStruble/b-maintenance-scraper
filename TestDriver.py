@@ -18,6 +18,14 @@
 # TODO: manual first time setup - parallel process count (and go through all other config options)
 # TODO: logging (maybe automatically log all console output/input (except login info)
 # TODO: may need to include empty Browser and Profiles directories with releases - maybe add if missing (or just ship with)
+# TODO: Scraper scrape_order and scrape_request exceptions too broad
+# TODO: Include start/end info in readme
+# TODO: assert statements to ensure proper args and inputs
+# TODO: keyboard interrupt to exit (readme)
+# TODO: logging info - also for debugging failed database inserts (readme)
+# TODO: readme - login credentials not checked for validity - ensure correct when inputting
+# TODO: profiler for optimization
+
 import multiprocessing
 from MaintenanceDatabase import MaintenanceDatabase
 from Scraper import *
