@@ -78,22 +78,24 @@ class WebAutomation:
         driver.switch_to.frame("botright")
 
     @staticmethod
-    def find_xpath_helper(driver: WebDriver, xpath: str) -> str | None:
+    def find_xpath_helper(driver: WebDriver, xpath: str, wait_time: float = 3.0) -> str | None:
         """Find an element by xpath, convert to string, strip spaces commas.
         NOT intended for use outside WebAutomation.scrape_request()!
 
         Args:
             driver: Selenium webdriver to find element in.
             xpath: XPath to find element with.
+            wait_time: Time to wait (in seconds) for element to load if initial search fails.
 
         Returns:
             String value of element (commas and spaces are stripped)
         """
         try:
-            return driver.find_element(By.XPATH, xpath).text.strip(", ")
-        except:
-            print(f"failed to find element at XPATH: '{xpath}'")
-            return None
+            return WebDriverWait(driver, 1).until(EC.presence_of_element_located((By.XPATH, xpath))).text.strip(", ")
+        except Exception as e:
+            print(f"failed to find element at XPATH: '{xpath}':")
+            print(e)
+
 
     @staticmethod
     def scrape_request(driver: WebDriver, request_id: int) -> WorkOrderRequest:
@@ -129,6 +131,36 @@ class WebAutomation:
 
         return request
 
+    @staticmethod
+    def get_page_layout(driver: WebDriver, order_number: str) -> int:
+        """Determine the page layout type of the current work order.
+        Work order pages can have one of two different layouts.
+
+        Args:
+            driver: Selenium webdriver instance to search with.
+            order_number: Work order number to search for.
+        Returns:
+            1 if the page layout corresponds to the first scrape_order clause
+        Raises:
+            Exception if the page layout cannot be determined.
+        """
+        try:
+            if WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[6]/td[1]") == 'Facility:':
+                return 1
+            elif WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[4]/td[1]") == 'Facility:':
+                return 2
+            else:
+                raise Exception(f"Failed to determine page layout for work order [{order_number}]")
+        except Exception as e1:
+            try:
+                if WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[4]/td[1]") == 'Facility:':
+                    return 2
+                else:
+                    raise Exception(f"Failed to determine page layout for work order [{order_number}]")
+            except Exception as e2:
+                print(f"Failed to determine page layout for work order [{order_number}]:")
+                print(e2)
+
     # TODO: complete implementation
     @staticmethod
     def scrape_order(driver: WebDriver, order_number: str) -> WorkOrder:
@@ -142,31 +174,54 @@ class WebAutomation:
             WorkOrder object containing data about the work order.
         """
         WebAutomation.search_item(driver, order_number)
-
         order = WorkOrder(order_number)
-
-        # Scrape data
         order.order_number = order_number
-        order.facility = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[6]/td[2]")
-        order.building = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[7]/td[2]")
-        order.location_id = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[8]/td[2]")
-        order.priority = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[9]/td[2]")
-        order.request_date = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[10]/td[2]")
-        order.schedule_date = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[11]/td[2]")
-        order.work_status = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[12]/td[2]")
-        order.date_closed = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[13]/td[2]")
-        order.main_charge_account = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[14]/td[2]")
-        order.task_code = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[15]/td[2]/font")
-        order.reference_number = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[6]/td[4]")
-        order.tag_number = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[8]/td[4]")
-        order.item_description = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[9]/td[4]")
-        order.request_time = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[10]/td[4]")
-        order.date_last_posted = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[11]/td[4]")
-        order.trade = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[12]/td[4]")
-        order.contractor_name = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[13]/td[4]")
-        order.est_completion_date = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[14]/td[4]")
-        order.task_description = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[15]/td[3]/font")
-        order.requested_action = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[17]/td[2]")
-        order.corrective_action = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[18]/td[2]")
+
+        page_layout = WebAutomation.get_page_layout(driver, order_number)
+        # Scrape data
+        if page_layout == 1:
+            order.facility = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[6]/td[2]")
+            order.building = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[7]/td[2]")
+            order.location_id = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[8]/td[2]")
+            order.priority = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[9]/td[2]")
+            order.request_date = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[10]/td[2]")
+            order.schedule_date = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[11]/td[2]")
+            order.work_status = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[12]/td[2]")
+            order.date_closed = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[13]/td[2]")
+            order.main_charge_account = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[14]/td[2]")
+            order.task_code = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[15]/td[2]/font")
+            order.reference_number = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[6]/td[4]")
+            order.tag_number = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[8]/td[4]")
+            order.item_description = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[9]/td[4]")
+            order.request_time = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[10]/td[4]")
+            order.date_last_posted = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[11]/td[4]")
+            order.trade = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[12]/td[4]")
+            order.contractor_name = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[13]/td[4]")
+            order.est_completion_date = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[14]/td[4]")
+            order.task_description = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[15]/td[4]")
+            order.requested_action = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[17]/td[2]")
+            order.corrective_action = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[18]/td[2]")
+        elif page_layout == 2:
+            order.facility = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[4]/td[2]")
+            order.building = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[5]/td[2]")
+            order.location_id = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[6]/td[2]")
+            order.priority = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[7]/td[2]")
+            order.request_date = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[8]/td[2]")
+            order.schedule_date = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[9]/td[2]")
+            order.work_status = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[10]/td[2]")
+            order.date_closed = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[11]/td[2]")
+            order.main_charge_account = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[12]/td[2]")
+            order.task_code = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[13]/td[2]")
+            order.reference_number = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[4]/td[4]/p")
+            order.tag_number = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[6]/td[4]")
+            order.item_description = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[7]/td[4]")
+            order.request_time = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[8]/td[4]")
+            order.date_last_posted = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[9]/td[4]")
+            order.trade = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[10]/td[4]")
+            order.contractor_name = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[11]/td[4]")
+            order.est_completion_date = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[12]/td[4]")
+            order.task_description = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[13]/td[4]")
+            order.requested_action = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[15]/td[2]")
+            order.corrective_action = WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[16]/td[2]")
 
         return order
