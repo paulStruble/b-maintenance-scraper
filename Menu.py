@@ -2,6 +2,7 @@ import shutil
 import sys
 
 import readchar
+from pwinput import pwinput
 
 
 class Menu:
@@ -52,9 +53,9 @@ class Menu:
 
         # Return the number of lines printed
         if title is not None:
-            return len(options) + 4  # 4 lines of padding.
+            return len(options) + 4 + title.count('\n')  # 4 3 lines of padding + number of lines in title
         else:
-            return len(options) + 2  # 2 lines of padding.
+            return len(options) + 2  # 2 lines of padding
 
     # TODO: if an option spans multiple lines, the menu is not fully cleared each loop
     @staticmethod
@@ -87,18 +88,21 @@ class Menu:
                 return selected_index  # Select option.
 
     @staticmethod
-    def input_prompt(label: str = "Input: ") -> str:
+    def input_prompt(prompt: str = "Input: ", hidden: bool = False) -> str:
         """Prompt the user for input and clear the prompt from the terminal/command line after completion.
 
         Args:
-            label: The text to display for the prompt.
+            prompt: The text to display for the input prompt.
+            hidden: True to hide input while typing.
         Returns:
             The string input entered by the user.
         """
-        user_in = input(label)
+        if hidden:
+            user_in = pwinput(prompt=prompt)
+        else:
+            user_in = input(prompt)
         Menu.clear_lines(1)
         return user_in
-
 
 
 if __name__ == '__main__':
