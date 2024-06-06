@@ -1,8 +1,11 @@
 # TODO: remove non-base chrome profiles (take up a lot of storage)
 # TODO: first-time setup
 import configparser
+import copy
 import shutil
 from pathlib import Path
+
+from Menu import Menu
 
 
 class Config:
@@ -101,6 +104,9 @@ class Config:
         Returns:
             True if the value is valid, False otherwise.
         """
+        if value is None:
+            return False
+
         type_tag = option[0]
         match type_tag:
             case 'b':  # bool
@@ -117,7 +123,9 @@ class Config:
                 return False
 
     def update_option(self) -> None:
-        """Prompt the user to update a single config option. Update the option and save."""
+        """WARNING: DEPRECATED BY NEW VERSION OF settings_menu\n
+        Prompt the user to update a single config option. Update the option and save.
+        """
         print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
         section, option, value = "", "", ""
 
@@ -132,25 +140,36 @@ class Config:
         self.save()
 
     def settings_menu(self) -> None:
-        """Prompt the user with a menu for viewing and editing the current config from the console."""
-        choice = None
-        exit_value = 2
-        options = [1, 2]
+        """Prompt the user with menus for viewing and editing the current config from the console."""
+        while True:  # Section selection
+            # Select from list of config sections (or exit settings menu)
+            section_options = self.config.sections()
+            section_options.append("[MAIN MENU]")
+            selected_section_index = Menu.menu_prompt(section_options, title="SETTINGS")
 
-        while choice != exit_value:
-            self.print_settings()
-            print("\nOptions:\n\n"
-                  "1. Update settings\n"
-                  "2. Return to main menu\n\n"
-                  "NOTE: Some settings require the program to be restarted in order to take full effect\n")
-            print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
+            if selected_section_index == len(section_options) - 1:
+                return None  # Exit settings menu
+            selected_section = section_options[selected_section_index]
 
-            while choice not in options:
-                choice = int(input("Input: "))
+            while True:  # Item selection
+                # Select from list of section items (or return to section selection)
+                section_title = f"SETTINGS > {selected_section}"
+                item_options = []
+                for key, value in self.config.items(selected_section):
+                    item_options.append(f"{key} = {value}")
+                item_options.append('[GO BACK]')
 
-            match choice:
-                case 1:
-                    self.update_option()
-                    choice = None
-                case 2:
-                    return None
+                selected_item_index = Menu.menu_prompt(item_options, title=section_title)
+
+                if selected_item_index == len(item_options) - 1:
+                    break
+                selected_item = item_options[selected_item_index].split('=')[0].strip()
+
+                # Prompt to update selected item
+                item_prompt = selected_item + ' = '
+                updated_item_value = None
+                print()  # Cosmetic padding
+                while not self.valid_value_input(selected_item, updated_item_value):
+                    updated_item_value = Menu.input_prompt(item_prompt)
+                self.set(selected_section, selected_item, updated_item_value, save=True)
+                Menu.clear_lines(1)  # Remove padding

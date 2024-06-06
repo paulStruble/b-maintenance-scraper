@@ -5,6 +5,7 @@ from pathlib import Path
 import requests
 import platform
 import sys
+from Menu import Menu
 from Config import Config
 
 
@@ -21,7 +22,7 @@ class SetupUtils:
         Args:
             path: path to requirements.txt file (optional)
         """
-        print(f'Installing required packages from {path}:\n')
+        print(f'\nInstalling required packages from {path}:\n')
         try:
             # Open requirements file.
             with open(path, 'r') as f:
@@ -66,28 +67,22 @@ class SetupUtils:
 
         #  Unsupported/undetected: manual input
         else:
-            options = [1, 2, 3, 4, 5]
-            choice = None
+            options = ["linux64",
+                       "mac-arm64",
+                       "mac-x64",
+                       "win32",
+                       "win64"]
 
-            print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
-            print("Platform detection failed or platform not supported.\n"
-                  "Please manually select a supported platform from the list below:\n\n"
-                  "1. linux64\n"
-                  "2. mac-arm64\n"
-                  "3. mac-x64\n"
-                  "4. win32\n"
-                  "5. win64\n")
-            print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
+            selected_option = Menu.menu_prompt(options, title="Platform detection failed or platform not supported.\n"
+                                                              "Please manually select a supported platform from the "
+                                                              "list below:")
 
-            while choice not in options:
-                choice = input("Input: ")
-
-            match choice:
-                case 1: return "linux64"
-                case 2: return "mac-arm64"
-                case 3: return "mac-x64"
-                case 4: return "win32"
-                case 5: return "win64"
+            match selected_option:
+                case 0: return "linux64"
+                case 1: return "mac-arm64"
+                case 2: return "mac-x64"
+                case 3: return "win32"
+                case 4: return "win64"
 
     @staticmethod
     def get_download_link(item: str, version: str, user_platform='win64') -> str:
@@ -199,7 +194,7 @@ class SetupUtils:
             user_platform: Current user platform (operating system).
         """
         while True:
-            version_in = input("Please enter the version number to download and install: ")
+            version_in = Menu.input_prompt("Please enter the version number to download and install: ")
             try:
                 SetupUtils.download_browser_items(version=version_in, user_platform=user_platform)
                 return version_in  # Exit the loop if the version is valid and installation succeeds
@@ -229,39 +224,34 @@ class SetupUtils:
             and chromedriver through this prompt.
             None if the user decides to do a manual installation.
         """
-        options = [1, 2, 3, 4, 5, 6]
-        choice = None
+        options = ["Stable (recommended)",
+                   "Beta",
+                   "Dev",
+                   "Canary",
+                   "Specific Version",
+                   "Manual Installation (see readme for instructions)"]
 
-        # Browser install menu
-        print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
-        print("Setup/Install for Chrome and chromedriver:\n"
-              "If a channel is selected, the latest version for the selected channel will be installed.\n\n"
-              "Select a channel/version to install:\n"
-              "1. Stable (recommended)\n"
-              "2. Beta\n"
-              "3. Dev\n"
-              "4. Canary\n"
-              "5. Specific Version\n"
-              "6. Manual Installation (see readme for instructions)")
-        print('-' * (shutil.get_terminal_size().columns - 1))
-
-        while choice not in options:
-            choice = int(input("Input: "))
+        title = ("Setup/Install for Chrome and chromedriver:\n"
+                 "If a channel is selected, the latest version for the selected channel will be installed.\n"
+                 "Select a channel/version to install:")
 
         user_platform = SetupUtils.get_platform()
-        match choice:
-            case 1: return SetupUtils.download_browser_items(channel='Stable', user_platform=user_platform)
-            case 2: return SetupUtils.download_browser_items(channel='Beta', user_platform=user_platform)
-            case 3: return SetupUtils.download_browser_items(channel='Dev', user_platform=user_platform)
-            case 4: return SetupUtils.download_browser_items(channel='Canary', user_platform=user_platform)
-            case 5: return SetupUtils.custom_browser_install_prompt(user_platform)
-            case 6:
+        selected_option = Menu.menu_prompt(options, title)
+        match selected_option:
+            case 0: return SetupUtils.download_browser_items(channel='Stable', user_platform=user_platform)
+            case 1: return SetupUtils.download_browser_items(channel='Beta', user_platform=user_platform)
+            case 2: return SetupUtils.download_browser_items(channel='Dev', user_platform=user_platform)
+            case 3: return SetupUtils.download_browser_items(channel='Canary', user_platform=user_platform)
+            case 4: return SetupUtils.custom_browser_install_prompt(user_platform)
+            case 5:
                 # Manual Installation
+                print()
                 print("To manually install Chrome and chromedriver, please see readme for instructions.\n"
                       "Once your manual installation is complete, input \"COMPLETE\" below to continue:\n")
                 user_in = ''
                 while user_in.lower() != 'complete':
-                    user_in = input('Input: ')
+                    user_in = Menu.input_prompt()
+                Menu.clear_lines(3)
 
     @staticmethod
     def first_time_setup(config: Config):
@@ -270,9 +260,6 @@ class SetupUtils:
         Args:
             config: Config object to edit/update as settings are changed.
         """
-        print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
-        print("FIRST-TIME SETUP:\n")
-
         # Stage 1: Install Python package dependencies from requirements.txt.
         SetupUtils.install_required_packages()
 
@@ -287,18 +274,18 @@ class SetupUtils:
             config.reload()  # Need to reload config if a manual update was made to s_chrome_version
 
         # Stage 3: Postgres Setup
-        print('-' * (shutil.get_terminal_size().columns - 1))
+        print()
         print("Please set up and connect a Postgres database as explained in the readme before moving forward.\n"
               "Once you have set up and connected your Postgres database, input \"COMPLETE\" below to continue:\n")
         user_in = ''
         database_setup_complete = False  # Ensure b_database_setup_complete is set to 'true' in config
         while user_in.lower() != 'complete' or not database_setup_complete:
-            user_in = input('Input: ')
+            user_in = Menu.input_prompt()
             config.reload()  # Need to reload config if a manual update was made to b_database_setup_complete
             database_setup_complete = config.get('Database', 'b_database_setup_complete')
 
         config.set('Program-Variables', 'b_first_time_setup_complete', 'true', save=True)
-        print("\nFIRST-TIME SETUP COMPLETE")
+        Menu.clear_lines(4)
 
 
 if __name__ == '__main__':

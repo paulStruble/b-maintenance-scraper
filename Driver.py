@@ -7,6 +7,7 @@ from Config import *
 from User import login_prompt
 from SetupUtils import SetupUtils
 from pathlib import Path
+from Menu import Menu
 
 
 class Driver:
@@ -38,9 +39,9 @@ class Driver:
         # Prompt for database password input if configured to do so
         if self.config.get("Database", "b_input_database_password_at_runtime"):
             if self.password_input_hidden:
-                password = pwinput(prompt="Database Password: ")
+                password = Menu.input_prompt(prompt="Database Password: ", hidden=True)
             else:
-                password = input("Database Password: ")
+                password = Menu.input_prompt("Database Password: ")
 
         headless = self.config.get("Scraper", "b_primary_scraper_headless")  # For primary scraper only
         database = MaintenanceDatabase(log=self.log, chrome_path=self.get_chrome_dir(),
@@ -51,34 +52,24 @@ class Driver:
 
     def main_menu(self) -> None:
         """Run the main menu loop with options to navigate the program."""
-        options = [1, 2, 3, 4]
-        exit_value = 4
-        choice = None
+        title = "MAIN MENU"
+        options = ["Scrape a range of work order requests and write to your database",
+                   "Scrape a range of work orders and write to your database",
+                   "Settings",
+                   "Exit"]
 
-        # Main menu loop
-        while choice != exit_value:
-            print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
-            print("\nOptions:\n\n"
-                  "1. Scrape a range of work order requests and write to your database\n"
-                  "2. Scrape a range of work orders and write to your database\n"
-                  "3. Settings\n"
-                  "4. Exit\n")
-            print('-' * (shutil.get_terminal_size().columns - 1))
-
-            while choice not in options:
-                choice = int(input("Input: "))
-
-            match choice:
-                case 1:
+        while True:
+            selected_option = Menu.menu_prompt(options, title=title)
+            match selected_option:
+                case 0:
                     self.scrape_range_prompt(item_type='request')
-                case 2:
+                case 1:
                     order_prefix = self.config.get('Program-Variables', 's_work_order_prefix')
                     self.scrape_range_prompt(item_type='order', prefix=order_prefix)
-                case 3:
+                case 2:
                     self.config.settings_menu()
-                case 4:
+                case 3:
                     return None
-            choice = None
 
     def scrape_range_prompt(self, item_type: str, prefix: str = "") -> None:
         """Prompt the user to scrape a range of work order requests or work orders and add them to the database.
@@ -87,8 +78,8 @@ class Driver:
             item_type: Type of item to be scraped (either 'request' or 'order').
             prefix: Prefix to append to work order numbers ("" for requests).
         """
-        start = int(input(f"start id: {prefix}"))
-        stop = int(input(f"stop id: {prefix}"))
+        start = int(Menu.input_prompt(f"start id: {prefix}"))
+        stop = int(Menu.input_prompt(f"stop id: {prefix}"))
 
         if item_type == "request":
             start = max(1, start)  # Inputting 0 causes program to crash
