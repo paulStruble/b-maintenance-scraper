@@ -25,6 +25,10 @@
 # TODO: logging info - also for debugging failed database inserts (readme)
 # TODO: readme - login credentials not checked for validity - ensure correct when inputting
 # TODO: profiler for optimization
+# TODO: class docstrings
+# TODO: handle keyboard interrupts while scraping requests/orders to properly allow for pausing/quitting (kill processes)
+# TODO: readme/documentation about last tested working version (of chrome/chromedriver)
+# TODO: cleanup: 2-line docstring descriptions need newlines
 
 import multiprocessing
 from MaintenanceDatabase import MaintenanceDatabase
