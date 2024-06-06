@@ -1,6 +1,7 @@
 import shutil
 import sys
 
+import keyboard
 import readchar
 from pwinput import pwinput
 
@@ -49,17 +50,15 @@ class Menu:
             else:
                 print(f"|   {option}")
 
-        print()  # Padding
-
         # Return the number of lines printed
         if title is not None:
-            return len(options) + 4 + title.count('\n')  # 4 3 lines of padding + number of lines in title
+            return len(options) + 3 + title.count('\n')  # 3 lines of padding + number of lines in title
         else:
-            return len(options) + 2  # 2 lines of padding
+            return len(options) + 1  # 2 lines of padding
 
     # TODO: if an option spans multiple lines, the menu is not fully cleared each loop
     @staticmethod
-    def menu_prompt(options: list[str], title: str = None, clear: bool = True) -> int:
+    def menu_prompt(options: list[str], title: str = None, clear: bool = True, debug: bool = False) -> int:
         """Renders a basic menu with a list of options to a terminal/command line and allows the user to navigate and
         choose from the list with the keyboard.
 
@@ -67,6 +66,7 @@ class Menu:
             options: The list of options to render.
             title: The title of the menu.
             clear: True to clear menu from screen after complete, False to leave on screen.
+            debug: True to use debug mode (allows arrow key input in pycharm debugger terminal).
         Returns:
             The index of the menu option selected by the user (0-indexed).
         """
@@ -76,16 +76,32 @@ class Menu:
         # Menu loop
         while True:
             previous_lines = Menu.print_menu(options, selected_index, previous_lines, title)  # Render menu
-            key_in = readchar.readkey()  # Get input
 
-            if key_in == readchar.key.UP and selected_index > 0:
-                selected_index -= 1  # Move cursor UP.
-            elif key_in == readchar.key.DOWN and selected_index < len(options) - 1:
-                selected_index += 1  # Move cursor DOWN.
-            elif key_in == readchar.key.ENTER or key_in == '\n':
-                if clear:
-                    Menu.clear_lines(previous_lines)  # Clear menu from screen.
-                return selected_index  # Select option.
+            if debug:
+                key_event = keyboard.read_event()
+                key_name = key_event.name
+
+                if key_event.event_type == keyboard.KEY_DOWN:
+                    if key_name == 'up' and selected_index > 0:
+                        selected_index -= 1  # Move cursor UP.
+                    elif key_name == 'down' and selected_index < len(options) - 1:
+                        selected_index += 1  # Move cursor DOWN.
+                    elif key_name == 'enter' or key_name == '\n':
+                        if clear:
+                            Menu.clear_lines(previous_lines)  # Clear menu from screen.
+                        return selected_index  # Select option.
+
+            else:
+                key_in = readchar.readkey()  # Get input
+
+                if key_in == readchar.key.UP and selected_index > 0:
+                    selected_index -= 1  # Move cursor UP.
+                elif key_in == readchar.key.DOWN and selected_index < len(options) - 1:
+                    selected_index += 1  # Move cursor DOWN.
+                elif key_in == readchar.key.ENTER or key_in == '\n':
+                    if clear:
+                        Menu.clear_lines(previous_lines)  # Clear menu from screen.
+                    return selected_index  # Select option.
 
     @staticmethod
     def input_prompt(prompt: str = "Input: ", hidden: bool = False) -> str:
