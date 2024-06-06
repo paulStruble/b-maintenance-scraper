@@ -86,6 +86,20 @@ class Menu:
                     Menu.clear_lines(previous_lines)  # Clear menu from screen.
                 return selected_index  # Select option.
 
+    @staticmethod
+    def input_prompt(label: str = "Input: ") -> str:
+        """Prompt the user for input and clear the prompt from the terminal/command line after completion.
+
+        Args:
+            label: The text to display for the prompt.
+        Returns:
+            The string input entered by the user.
+        """
+        user_in = input(label)
+        Menu.clear_lines(1)
+        return user_in
+
+
 
 if __name__ == '__main__':
     menu_options_1 = ["Option 1", "Option 2", "Option 3", "Option 4"]
