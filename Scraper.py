@@ -65,7 +65,7 @@ class Scraper:
         # Initialize driver
         driver = webdriver.Chrome(options=chrome_options, service=chrome_service)
         if not self.headless:
-            driver.set_window_size(1280, 720)  # TODO: set window size relative to monitor resolution, config
+            driver.set_window_size(1280, 720)
         return driver
 
     def login_calnet(self) -> None:

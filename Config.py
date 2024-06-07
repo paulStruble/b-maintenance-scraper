@@ -1,4 +1,3 @@
-# TODO: remove non-base chrome profiles (take up a lot of storage)
 import configparser
 import shutil
 from pathlib import Path
