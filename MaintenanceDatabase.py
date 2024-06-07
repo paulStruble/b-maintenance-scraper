@@ -200,5 +200,6 @@ class MaintenanceDatabase:
 
     def close(self) -> None:
         """Close the connection to the database."""
+        self.scraper.close()
         self.cursor.close()
         self.connection.close()
