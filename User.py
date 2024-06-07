@@ -24,7 +24,11 @@ def login_prompt(hidden: bool = True) -> User:
     Returns:
         A User object with the input credentials.
     """
-    new_username = Menu.input_prompt("Username: ")
-    new_password = Menu.input_prompt("Password: ", hidden=hidden)
+    new_username = input("Username: ")
+    if hidden:
+        new_password = pwinput(prompt="Password: ")
+    else:
+        new_password = input("Password: ")
+    Menu.clear_lines(2)
 
     return User(new_username, new_password)
