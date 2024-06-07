@@ -127,11 +127,14 @@ class Driver:
                                        calnet_user=calnet_user, process_id=process_id, headless=headless, host=host,
                                        dbname=dbname, user=user, password=password, port=port)
 
-        if item_type == 'request':
-            database.add_requests(item_ids)
-        elif item_type == 'order':
-            database.add_orders(item_ids)
-        database.close()
+        try:
+            if item_type == 'request':
+                database.add_requests(item_ids)
+            elif item_type == 'order':
+                database.add_orders(item_ids)
+            database.close()
+        except KeyboardInterrupt:  # Allows user to exit program to interrupt scraping a large range of items
+            database.close()
 
     def add_item_range_parallel(self, item_type: str, start: int, stop: int, num_processes: int, headless=False,
                                 prefix: str = "") -> None:
