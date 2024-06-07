@@ -29,6 +29,8 @@
 # TODO: handle keyboard interrupts while scraping requests/orders to properly allow for pausing/quitting (kill processes)
 # TODO: readme/documentation about last tested working version (of chrome/chromedriver)
 # TODO: cleanup: 2-line docstring descriptions need newlines
+# TODO: readme/doc info about deleting old chrome profiles
+# TODO: readme/doc - can update config directly - not while program is running
 
 import multiprocessing
 from MaintenanceDatabase import MaintenanceDatabase
