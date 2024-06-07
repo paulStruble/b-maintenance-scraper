@@ -1,10 +1,12 @@
 from datetime import datetime
+from pathlib import Path
 
 
 class Log:
     def __init__(self):
-        """An object linked to a unique .log file that captures events and errors throughout the program."""
-        self.filepath = f"./Logs/Log {datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        """A log to capture certain events/errors throughout the program's execution (bound to a specific .log file)."""
+        filename = f"Log {datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        self.filepath = Path.cwd() / 'Logs' / filename
         with open(self.filepath, 'w') as log:
             log.write(f"log created at time: {datetime.now()}\n\n")
 
@@ -12,7 +14,7 @@ class Log:
         """Add a timestamped message to the log and print it to the console.
 
         Args:
-            message: The message to add to the log and printed (excluding timestamp).
+            message: The message to add to the log and print (excluding timestamp)
         """
         print(self.add_quiet(message))
 
@@ -20,10 +22,10 @@ class Log:
         """Add a timestamped message to the log (without printing it to the console).
 
         Args:
-            message: The message to add to the log (excluding timestamp).
+            message: The message to add to the log (excluding timestamp)
 
         Returns:
-            The timestamped log message.
+            The timestamped log message
         """
         output = f"[{datetime.now()}] " + message
 

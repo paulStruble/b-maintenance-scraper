@@ -24,15 +24,15 @@ class SetupUtils:
         """
         print(f'\nInstalling required packages from {path}:\n')
         try:
-            # Open requirements file.
-            with open(path, 'r') as f:
+            # Open requirements file
+            with open(path, 'r') as requirements_file:
                 # Read list of required packages.
-                packages = f.read().splitlines()
+                packages = requirements_file.read().splitlines()
 
-            # Iterate over each package and install it.
+            # Iterate over each package and install it
             for package in packages:
                 print(f"Installing [{package}] ...")
-                subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+                subprocess.check_call([sys.executable, "-m", "pip", "install", package])  # Install
                 print(f"[{package}] installation complete")
             print("All packages installed successfully.")
         except Exception as e:
@@ -45,7 +45,7 @@ class SetupUtils:
         Prompt the user to manually select platform if the detected platform is incompatible.
 
         Returns:
-            User's current platform if compatible.
+            User's current platform
         """
         system = platform.system()
         machine = platform.machine()
@@ -77,27 +77,22 @@ class SetupUtils:
                                                               "Please manually select a supported platform from the "
                                                               "list below:")
 
-            match selected_option:
-                case 0: return "linux64"
-                case 1: return "mac-arm64"
-                case 2: return "mac-x64"
-                case 3: return "win32"
-                case 4: return "win64"
+            return options[selected_option]
 
     @staticmethod
-    def get_download_link(item: str, version: str, user_platform='win64') -> str:
+    def get_download_link(item: str, version: str, user_platform: str) -> str:
         """Fetches the download link for specified version of the given item.
 
         Args:
             item: The download link to fetch (e.g. 'chrome', 'chromedriver', etc.)
-            version: Version number of the item to download.
-            user_platform: Current user platform (operating system).
+            version: Version number of the item to download
+            user_platform: Current user platform (operating system)
 
         Returns:
-            Download link for specified version of the given item.
+            Download link for specified version of the given item
 
         Raises:
-            ValueError: If the version is not supported.
+            ValueError: If the version is not supported
         """
         print(f"Fetching download link for [{item}] version [{version}] on [{user_platform}] ...")
         endpoint = SetupUtils._chrome_for_testing_url + SetupUtils._known_good_versions_with_downloads
@@ -114,19 +109,19 @@ class SetupUtils:
                         print(f"Download link for [{item}] version [{version}]: {url}")
                         return url
 
-        raise ValueError()
+        raise ValueError(f"Failed to find download link for [{item}] version [{version}] on [{user_platform}].")
 
     @staticmethod
-    def get_latest_download_link(item: str, channel='Stable', user_platform='win64') -> tuple[str, str]:
+    def get_latest_download_link(item: str, user_platform: str, channel: str = 'Stable') -> tuple[str, str]:
         """Fetch the version number and download link for the latest version of the given item.
 
         Args:
-            item: The download link to fetch (e.g. 'chrome', 'chromedriver', etc.)
-            channel: Channel to download (e.g. 'Stable', 'Beta', etc.).
-            user_platform: Current user platform (operating system).
+            item: The download link to fetch (e.g. 'chrome', 'chromedriver')
+            channel: Channel to download (e.g. 'Stable', 'Beta', etc.)
+            user_platform: Current user platform (operating system)
 
         Returns:
-            Tuple of ([latest version], [link to download])
+            Tuple of (<latest version>, <link to download>)
         """
         print(f"Fetching download link for latest [{channel}] [{user_platform}] version of [{item}] ...")
         endpoint = SetupUtils._chrome_for_testing_url + SetupUtils._last_known_good_versions_with_downloads
@@ -144,14 +139,15 @@ class SetupUtils:
                 return version, url
 
     @staticmethod
-    def download_browser_items(version=None, download_dir=_browser_path, channel='Stable', user_platform='win64') -> str:
+    def download_browser_items(version: str = None, download_dir: Path = _browser_path, channel: str = None,
+                               user_platform: str = None) -> str:
         """Download and unzip latest Chrome and chromedriver versions to the specified directory.
 
         Args:
-            version: Version of items to be downloaded (None for latest version).
-            download_dir: Directory to download files to.
-            channel: Channel to download (e.g. 'Stable', 'Beta', etc.).
-            user_platform: Current user platform (operating system).
+            version: Version of items to be downloaded (None for latest version)
+            download_dir: Directory to download files to
+            channel: Channel to download (e.g. 'Stable', 'Beta', etc.)
+            user_platform: Current user platform (operating system)
 
         Returns:
             Version number of download (e.g. 125-0-6422-78)
@@ -191,7 +187,7 @@ class SetupUtils:
         """Prompt the user for chrome and chromedriver installation (for a user-specified version of chrome).
 
         Args:
-            user_platform: Current user platform (operating system).
+            user_platform: Current user platform (operating system)
         """
         while True:
             version_in = Menu.input_prompt("Please enter the version number to download and install: ")
@@ -214,15 +210,15 @@ class SetupUtils:
                     except OSError as e:
                         print(f"Error removing directory {version_dir}: {e}")
 
-    # TODO: last working version option
     @staticmethod
     def browser_install_prompt():
         """Prompt the user for Chrome and chromedriver installation.
 
         Returns:
             String version number of chrome/chromedriver (e.g. "125-0-6422-78") if the user decides to install Chrome
-            and chromedriver through this prompt.
-            None if the user decides to do a manual installation.
+            and chromedriver through this prompt
+
+            None if the user decides to do a manual installation
         """
         options = ["Stable (recommended)",
                    "Beta",
@@ -245,25 +241,25 @@ class SetupUtils:
             case 4: return SetupUtils.custom_browser_install_prompt(user_platform)
             case 5:
                 # Manual Installation
-                print()
+                print()  # Cosmetic padding
                 print("To manually install Chrome and chromedriver, please see readme for instructions.\n"
                       "Once your manual installation is complete, input \"COMPLETE\" below to continue:\n")
                 user_in = ''
                 while user_in.lower() != 'complete':
                     user_in = Menu.input_prompt()
-                Menu.clear_lines(3)
+                Menu.clear_lines(4)
 
     @staticmethod
     def first_time_setup(config: Config):
         """Runs a first-time setup to install dependencies.
 
         Args:
-            config: Config object to edit/update as settings are changed.
+            config: Config object to edit/update as settings are changed
         """
-        # Stage 1: Install Python package dependencies from requirements.txt.
+        # Stage 1: Install Python package dependencies from requirements.txt
         SetupUtils.install_required_packages()
 
-        # Stage 2: Install Chrome and chromedriver.
+        # Stage 2: Install Chrome and chromedriver
         installed_version = SetupUtils.browser_install_prompt()
         user_platform = SetupUtils.get_platform()
         # Write version number and platform to config

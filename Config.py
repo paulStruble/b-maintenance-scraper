@@ -1,16 +1,13 @@
 # TODO: remove non-base chrome profiles (take up a lot of storage)
-# TODO: first-time setup
 import configparser
-import copy
 import shutil
 from pathlib import Path
-
 from Menu import Menu
 
 
 class Config:
-    def __init__(self, path=None):
-        """An ini configuration for the current program with functions to retrieve and modify options at runtime.
+    def __init__(self, path: Path = None):
+        """An ini configuration for the current program with methods to retrieve and modify options at runtime.
 
         Args:
             path: Path to the config file
@@ -19,22 +16,22 @@ class Config:
             path = Path.cwd() / 'config.ini'
         self.path = path
         self.config = configparser.ConfigParser()
-        self.config.read(self.path)
+        self.config.read(self.path)  # Load config file
 
     def get(self, section: str, option: str):
         """Retrieve an option from the config.
 
         Args:
-            section: The config section to retrieve from.
-            option: the name of the specific option to retrieve.
+            section: The config section to retrieve from
+            option: The name of the specific option to retrieve
 
         Returns:
-            The value of the option in the config.
+            The value of the option in the config (cast to the correct datatype)
         """
         value = self.config[section][option]
 
-        # Cast the value to the correct datatype.
-        # The first character of each option name symbolizes the option's datatype.
+        # Cast the value to the correct datatype
+        # The first character of each option name denotes the option's datatype
         match option[0]:
             case 's':  # str
                 return value
@@ -51,23 +48,23 @@ class Config:
         MaintenanceDatabase object). Note that initializing a MaintenanceDatabase object still requires other arguments.
 
         Returns:
-            A tuple of arguments from the config to initialize a MaintenanceDatabase object.
+            A tuple of arguments from the config to initialize a MaintenanceDatabase object
         """
-        host = self.config.get('Database', 's_host')
-        dbname = self.config.get('Database', 's_name')
-        user = self.config.get('Database', 's_user')
-        password = self.config.get('Database', 's_password')
-        port = self.config.get('Database', 'i_port')
+        host = self.get('Database', 's_host')
+        dbname = self.get('Database', 's_name')
+        user = self.get('Database', 's_user')
+        password = self.get('Database', 's_password')
+        port = self.get('Database', 'i_port')
         return host, dbname, user, password, port
 
-    def set(self, section, option, value, save=False) -> None:
+    def set(self, section: str, option: str, value, save=False) -> None:
         """Update an option in the config. Does not save the change by default.
 
         Args:
-            section: The section of the option to update.
-            option: The specific option to update.
-            value: The new value to set the option to.
-            save: Whether to write the changes immediately or not.
+            section: The section of the option to update
+            option: The specific option to update
+            value: The new value to set the option to
+            save: True to write the changes immediately (False waits for a call to <Config>.save() before saving)
         """
         self.config[section][option] = value
         if save:
@@ -77,14 +74,16 @@ class Config:
         """Save and write changes made to the config."""
         with open(self.path, 'w') as config_file:
             self.config.write(config_file)
-        self.config.read(self.path)  # Update the currently loaded config to account for change
+        self.reload()  # Reload config to account for change
 
     def reload(self) -> None:
-        """Reload config settings from disk."""
+        """Reload config settings from disk.\n
+        WARNING: DISCARDS ALL UNSAVED CHANGES."""
         self.config.read(self.path)
 
     def print_settings(self) -> None:
-        """Print the current config to the console."""
+        """WARNING: DEPRECATED BY NEW VERSION OF settings_menu\n
+        Print the current config to the console."""
         print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
         print("\nCurrent Settings:\n")
         for section in self.config.sections():
@@ -94,20 +93,21 @@ class Config:
             print()
         print('-' * (shutil.get_terminal_size().columns - 1))
 
-    def valid_value_input(self, option: str, value: str) -> bool:
+    @staticmethod
+    def is_valid_option_value(option: str, value: str) -> bool:
         """Check if a value has the same datatype as a specified option.
 
         Args:
-            option: The config option to check against.
-            value: The new value to check for validity.
+            option: The name of the config option to check against
+            value: The new value to check for validity
 
         Returns:
-            True if the value is valid, False otherwise.
+            True if the value is valid, False otherwise
         """
         if value is None:
             return False
 
-        type_tag = option[0]
+        type_tag = option[0]  # First character of option denotes the option's datatype
         match type_tag:
             case 'b':  # bool
                 return value in ('true', 'false')
@@ -133,11 +133,10 @@ class Config:
             section = input("Section: ")
         while option not in self.config[section]:
             option = input("Option Name: ")
-        while not self.valid_value_input(option, value):
+        while not self.is_valid_option_value(option, value):
             value = input("Updated Value: ")
 
-        self.set(section, option, value)
-        self.save()
+        self.set(section, option, value, save=True)
 
     def settings_menu(self) -> None:
         """Prompt the user with menus for viewing and editing the current config from the console."""
@@ -151,8 +150,8 @@ class Config:
                 return None  # Exit settings menu
             selected_section = section_options[selected_section_index]
 
-            while True:  # Item selection
-                # Select from list of section items (or return to section selection)
+            while True:  # Option selection
+                # Select from list of section options (or return to section selection)
                 section_title = f"SETTINGS > {selected_section}"
                 item_options = []
                 for key, value in self.config.items(selected_section):
@@ -163,13 +162,13 @@ class Config:
 
                 if selected_item_index == len(item_options) - 1:
                     break
-                selected_item = item_options[selected_item_index].split('=')[0].strip()
+                selected_item = item_options[selected_item_index].split('=')[0].strip()  # Parse option name
 
                 # Prompt to update selected item
                 item_prompt = selected_item + ' = '
                 updated_item_value = None
                 print()  # Cosmetic padding
-                while not self.valid_value_input(selected_item, updated_item_value):
+                while not self.is_valid_option_value(selected_item, updated_item_value):
                     updated_item_value = Menu.input_prompt(item_prompt)
                 self.set(selected_section, selected_item, updated_item_value, save=True)
-                Menu.clear_lines(1)  # Remove padding
+                Menu.clear_lines(1)  # Clear padding

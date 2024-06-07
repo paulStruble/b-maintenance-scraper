@@ -3,7 +3,7 @@ class WorkOrderRequest:
         """A work order request containing all data pertaining to the request.
 
         Args:
-            request_id: id of the work request.
+            request_id: id of this work order request (ex. 379422)
         """
         self.id = request_id
         self.room = None
@@ -22,7 +22,8 @@ class WorkOrderRequest:
     def to_list(self) -> list:
         """Convert this request into an ordered list of all datapoints.
 
-        Returns: List of datapoints in order."""
+        Returns: List of datapoints in order
+        """
         return [self.id,
                 self.room,
                 self.status,
@@ -41,7 +42,7 @@ class WorkOrderRequest:
         """Return a csv-entry-representation of this work request.
 
         Returns:
-            Comma-separated string of all datapoints.
+            Comma-separated string of all datapoints
         """
         string_list = [str(datapoint).replace('\n', '\\n') for datapoint in self.to_list()]
         return ','.join(string_list)

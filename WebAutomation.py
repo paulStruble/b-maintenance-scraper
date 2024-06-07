@@ -3,7 +3,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
-
 from User import User
 from WorkOrder import WorkOrder
 from WorkOrderRequest import WorkOrderRequest
@@ -13,13 +12,16 @@ class WebAutomation:
     """Contains utility functions for Chrome automation using Selenium."""
 
     @staticmethod
-    def login_calnet(driver: WebDriver, user: User, duo_wait_time: int = 5) -> None:
+    def login_calnet(driver: WebDriver, user: User, duo_wait_time: float = 5.0) -> None:
         """Complete the Calnet login and Duo Mobile confirmation for UC Berkeley's maintenance site.
 
         Args:
-            driver: Selenium webdriver instance for automated login.
-            user: Calnet user for login.
-            duo_wait_time: Time (in seconds) to wait for the Duo Mobile confirmation screen to load after logging in.
+            driver: Selenium webdriver instance for automated login
+            user: Calnet user for login
+            duo_wait_time: Time (in seconds) to wait for the Duo Mobile confirmation screen to load after logging in
+
+        Returns:
+            True if login is successful, False otherwise
         """
         url = "https://auth.berkeley.edu/cas/login?service=https://maintenance.housing.berkeley.edu/cas2/login.aspx"
         driver.get(url)
@@ -43,19 +45,19 @@ class WebAutomation:
 
     @staticmethod
     def select_item(driver: WebDriver, item_value: str) -> None:
-        """Select "Work Request" from the maintenance tracking dropdown menu.
+        """Select "Work Request" or "Work Order" from the maintenance tracking dropdown menu.
 
         Args:
-            driver: Selenium webdriver instance for automated selection.
-            item_value: Value of item to be selected from dropdown menu ('WR' for Work Request, 'WO' for Work Order).
+            driver: Selenium webdriver instance for automated selection
+            item_value: Value of item to be selected from dropdown menu ('WR' for Work Request, 'WO' for Work Order)
         """
-        try:  # Wait for the sidebar to load # TODO: move into login_calnet if redundant
+        try:  # Wait for the sidebar to load
             driver.switch_to.default_content()
             WebDriverWait(driver, 10).until(EC.frame_to_be_available_and_switch_to_it((By.NAME, "botleft")))
         except:
             print("frame 'botleft' could not be found or switched to")
 
-        # Select "Work Request" button
+        # Select item from dropdown menu
         dropdown_select = Select(driver.find_element(By.XPATH, "//select[@name='Search']"))
         dropdown_select.select_by_value(item_value)
 
@@ -64,8 +66,8 @@ class WebAutomation:
         """Search for a work order or work order request in the search box.
 
         Args:
-            driver: Selenium webdriver instance for automated search.
-            query: Work order number or work request id.
+            driver: Selenium webdriver instance for automated search
+            query: Work order number or work request id
         """
         search_box = driver.find_element(By.NAME, "WorkOrderNumber")
         search_box.clear()
@@ -83,9 +85,9 @@ class WebAutomation:
         NOT intended for use outside WebAutomation.scrape_request()!
 
         Args:
-            driver: Selenium webdriver to find element in.
-            xpath: XPath to find element with.
-            wait_time: Time to wait (in seconds) for element to load if initial search fails.
+            driver: Selenium webdriver to find element in
+            xpath: XPath to find element with
+            wait_time: Time to wait (in seconds) for element to load if initial search fails
 
         Returns:
             String value of element (commas and spaces are stripped)
@@ -96,17 +98,16 @@ class WebAutomation:
             print(f"failed to find element at XPATH: '{xpath}':")
             print(e)
 
-
     @staticmethod
     def scrape_request(driver: WebDriver, request_id: int) -> WorkOrderRequest:
         """Submit a search for a single work order request.
 
         Args:
-            driver: Selenium webdriver to automate search for.
-            request_id: id of the request to search for.
+            driver: Selenium webdriver to automate search for
+            request_id: id of the request to search for
 
         Returns:
-            WorkOrderRequest object containing data about the work request.
+            WorkOrderRequest object containing data about the work request
         """
         WebAutomation.search_item(driver, str(request_id))
 
@@ -134,44 +135,44 @@ class WebAutomation:
     @staticmethod
     def get_page_layout(driver: WebDriver, order_number: str) -> int:
         """Determine the page layout type of the current work order.
-        Work order pages can have one of two different layouts.
+        (Work order pages can have one of two different layouts which changes the XPATHs of data.)
 
         Args:
-            driver: Selenium webdriver instance to search with.
-            order_number: Work order number to search for.
+            driver: Selenium webdriver instance to search with
+            order_number: Work order number to search for
         Returns:
             1 if the page layout corresponds to the first scrape_order clause
+            2 if the page layout corresponds to the second scrape_order clause
         Raises:
-            Exception if the page layout cannot be determined.
+            Exception if the page layout cannot be determined
         """
         try:
             if WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[6]/td[1]") == 'Facility:':
-                return 1
+                return 1  # Layout 1
             elif WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[4]/td[1]") == 'Facility:':
-                return 2
+                return 2  # Layout 2
             else:
                 raise Exception(f"Failed to determine page layout for work order [{order_number}]")
         except Exception as e1:
             try:
                 if WebAutomation.find_xpath_helper(driver, "/html/body/table/tbody/tr[4]/td[1]") == 'Facility:':
-                    return 2
+                    return 2  # Layout 2
                 else:
                     raise Exception(f"Failed to determine page layout for work order [{order_number}]")
             except Exception as e2:
                 print(f"Failed to determine page layout for work order [{order_number}]:")
                 print(e2)
 
-    # TODO: complete implementation
     @staticmethod
     def scrape_order(driver: WebDriver, order_number: str) -> WorkOrder:
         """Submit a search for a single work order.
 
         Args:
-            driver: Selenium webdriver to automate search for.
-            order_number: id of the request to search for.
+            driver: Selenium webdriver to automate search for
+            order_number: id of the request to search for
 
         Returns:
-            WorkOrder object containing data about the work order.
+            WorkOrder object containing data about the work order
         """
         WebAutomation.search_item(driver, order_number)
         order = WorkOrder(order_number)

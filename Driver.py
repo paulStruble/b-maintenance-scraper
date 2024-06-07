@@ -12,10 +12,10 @@ from Menu import Menu
 
 class Driver:
     def __init__(self):
-        """A driver used to run the program from. Includes calls to menus, provides a cli, and navigates the program
-        when run with <driver>.run()"""
-        self.config = Config()  # Config object to load the program's settings
-        self.log = Log()  # Log object to track progress and error codes
+        """A driver used to organize program execution/flow. Provides a simple cli and navigates the program when run
+        with <driver>.run()"""
+        self.config = Config()  # Config object to load/store the program's settings
+        self.log = Log()  # Log object to record (some) progress and error codes
 
         # First-time setup
         if not self.config.get('Program-Variables', 'b_first_time_setup_complete'):
@@ -27,21 +27,17 @@ class Driver:
         self.database = self.connect_primary_database()
 
     def connect_primary_database(self) -> MaintenanceDatabase:
-        """Connect to the database (database connection information and credentials are stored in the config).
-        Note:
-            This function should only be used to connect to the DRIVER'S database (NOT for parallel processes).
+        """Connect to the database (database connection information and credentials are stored in the config).\n
+        WARNING: This function should only be used to connect to the DRIVER'S database (NOT for parallel processes).
 
         Returns:
-            The primary database object.
+            The primary database object (for use in the Driver)
         """
         host, dbname, user, password, port = self.config.get_database_args()
 
         # Prompt for database password input if configured to do so
         if self.config.get("Database", "b_input_database_password_at_runtime"):
-            if self.password_input_hidden:
-                password = Menu.input_prompt(prompt="Database Password: ", hidden=True)
-            else:
-                password = Menu.input_prompt("Database Password: ")
+            password = Menu.input_prompt(prompt="Database Password: ", hidden=self.password_input_hidden)
 
         headless = self.config.get("Scraper", "b_primary_scraper_headless")  # For primary scraper only
         database = MaintenanceDatabase(log=self.log, chrome_path=self.get_chrome_dir(),
@@ -56,7 +52,7 @@ class Driver:
         options = ["Scrape a range of work order requests and write to your database",
                    "Scrape a range of work orders and write to your database",
                    "Settings",
-                   "Exit"]
+                   "[EXIT]"]
 
         while True:
             selected_option = Menu.menu_prompt(options, title=title)
@@ -75,21 +71,27 @@ class Driver:
         """Prompt the user to scrape a range of work order requests or work orders and add them to the database.
 
         Args:
-            item_type: Type of item to be scraped (either 'request' or 'order').
-            prefix: Prefix to append to work order numbers ("" for requests).
+            item_type: Type of item to be scraped (either 'request' or 'order')
+            prefix: Prefix to append to work order numbers (ignore for requests)
         """
-        start = int(Menu.input_prompt(f"start id: {prefix}"))
-        stop = int(Menu.input_prompt(f"stop id: {prefix}"))
+        start = float('inf')
+        stop = -1
+        while start > stop:
+            start = int(input(f"start id (inclusive): {prefix}"))
+            stop = int(input(f"stop id (exclusive): {prefix}"))
+            Menu.clear_lines(2)
 
         if item_type == "request":
-            start = max(1, start)  # Inputting 0 causes program to crash
+            start = max(1, start)  # Scraping request with id 0 causes program to crash
+            stop = max(start, stop)
 
         num_processes = self.config.get("Scraper", "i_parallel_process_count")  # Parallel process count
+        num_processes = max(1, num_processes)  # Ensure at least 1 process
 
         print(f"Initializing process: scrape and write orders from ids [{prefix}{start}] to [{prefix}{stop}] on "
               f"[{num_processes}] processes")
 
-        if num_processes > 1:  # Parallel processing
+        if num_processes > 1:  # Multiprocessing
             headless = self.config.get("Scraper", "b_parallel_scrapers_headless")
             self.add_item_range_parallel(item_type, start, stop, num_processes, headless=headless, prefix=prefix)
         else:  # Sequential processing
@@ -98,7 +100,7 @@ class Driver:
             elif item_type == "order":
                 self.database.add_order_range(start, stop, prefix)
 
-        print('-' * (shutil.get_terminal_size().columns - 1))  # Horizontal line (cosmetic)
+        print()  # Cosmetic padding
         print(f"Finished scraping requests from ids [{prefix}{start}] to [{prefix}{stop}]")
 
     @staticmethod
@@ -111,16 +113,16 @@ class Driver:
         connections and selenium webdrivers cannot be shared between processes.
 
         Args:
-            item_type: Type of item to be scraped (either 'request' or 'order').
-            item_ids: List of work order item ids to be scraped/added by this process.
-            prefix: Prefix to append to work order numbers ("" for requests).
-            log: Log object for recording progress and error messages.
-            chrome_path: Path pointing to the chrome directory to be used for Scrapers.
-            chromedriver_path: Path pointing to the chromedriver directory to be used for Scrapers.
-            calnet_user: Calnet user used to log into maintenance.housing.berkeley.edu.
-            process_id: Unique integer id assigned to this specific process.
-            headless: Whether this process should be run in a headless or headful browser.
-            db_args: Tuple of arguments to connect to the database.
+            item_type: Type of item to be scraped (either 'request' or 'order')
+            item_ids: List of work order item ids to be scraped/added by this process
+            prefix: Prefix to append to work order numbers ("" for requests)
+            log: Log object for recording progress and error messages
+            chrome_path: Path pointing to the chrome directory to be used for Scrapers
+            chromedriver_path: Path pointing to the chromedriver directory to be used for Scrapers
+            calnet_user: Calnet user used to log into maintenance.housing.berkeley.edu
+            process_id: Unique integer id assigned to this specific process
+            headless: True if this process should be run in a headless or headful browser
+            db_args: Tuple of arguments to connect to the database
         """
         host, dbname, user, password, port = db_args
         database = MaintenanceDatabase(log=log, chrome_path=chrome_path, chromedriver_path=chromedriver_path,
@@ -136,17 +138,17 @@ class Driver:
         except KeyboardInterrupt:  # Allows user to exit program to interrupt scraping a large range of items
             database.close()
 
-    def add_item_range_parallel(self, item_type: str, start: int, stop: int, num_processes: int, headless=False,
+    def add_item_range_parallel(self, item_type: str, start: int, stop: int, num_processes: int, headless: bool = False,
                                 prefix: str = "") -> None:
         """Scrape and add a range of work order requests or work orders to the database (in parallel).
 
         Args:
-            item_type: Type of item to be scraped (either 'request' or 'order').
-            start: First item id to scrape/add (inclusive).
-            stop: Last item id to scrape/add (exclusive).
-            num_processes: number of parallel processes to use.
-            headless: Whether processes should be run in a headless or headful browsers.
-            prefix: Prefix to append to work order numbers (leave empty for requests).
+            item_type: Type of item to be scraped (either 'request' or 'order')
+            start: First item id to scrape/add (inclusive)
+            stop: Last item id to scrape/add (exclusive)
+            num_processes: number of parallel processes to use
+            headless: True to run processes in a headless browsers
+            prefix: Prefix to append to work order numbers (leave empty for requests)
         """
         log = self.log
         chrome_path = self.get_chrome_dir()
@@ -170,19 +172,19 @@ class Driver:
         for process_id in range(num_processes):
             item_ids = id_dict[process_id]
             args.append((item_type, item_ids, prefix, log, chrome_path, chromedriver_path, calnet_user,
-                         process_id + 1, headless, db_args))
+                         process_id + 1, headless, db_args))  # Process 0 is reserved for the primary (driver) database
 
-        self.database.close()  # Main scraper needs to be closed to allow for its Chrome profile to be cloned for
-        # each parallel process
+        # Main scraper needs to be closed to allow for its Chrome profile to be cloned for each parallel process
+        self.database.close()
         del self.database
         with multiprocessing.Pool(processes=num_processes) as pool:
             pool.starmap(Driver.add_item_range_parallel_helper, args)
-        self.database = self.connect_primary_database()
+        self.database = self.connect_primary_database()  # Restart primary (driver) database
 
     def get_chrome_dir(self) -> Path:
-        """Get the path to the director of the currently-enabled Chrome version (e.g. chrome-win64).
+        """Get the path to the directory of the currently-enabled Chrome version (e.g. path to chrome-win64).
 
-            Returns: Path object pointing to the Chrome directory.
+            Returns: Path object pointing to the Chrome directory
         """
         chrome_version = self.config.get('Scraper', 's_chrome_version')
         chrome_platform = self.config.get('Scraper', 's_chrome_platform')

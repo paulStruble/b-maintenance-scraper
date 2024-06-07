@@ -1,28 +1,28 @@
-import shutil
 from pwinput import pwinput
+
 from Menu import Menu
 
 
 class User:
-    def __init__(self, username, password):
+    def __init__(self, username: str, password: str):
         """A single user with login credentials (username and password).
 
         Args:
-            username: The username of the user.
-            password: The password of the user.
+            username: The username of the user
+            password: The password of the user
         """
         self.username = username
         self.password = password
 
 
 def login_prompt(hidden: bool = True) -> User:
-    """Prompt the user for login credentials.
+    """Prompt the user to input login credentials.
 
     Args:
-        hidden: Whether to hide the password in the cli as it is being typed.
+        hidden: True to hide the password in the cli as it is being typed
 
     Returns:
-        A User object with the input credentials.
+        A User object with the input credentials
     """
     new_username = input("Username: ")
     if hidden:

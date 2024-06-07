@@ -10,20 +10,20 @@ from pathlib import Path
 class MaintenanceDatabase:
     def __init__(self, log: Log, chrome_path: Path, chromedriver_path: Path, calnet_user: User, host: str, dbname: str,
                  user: str, password: str, port: int, process_id: int = 0, headless=True):
-        """A connection to a PostgreSQL database with utilities to add work order request data.
+        """A connection to a PostgreSQL database with utilities to add work order and work order request data.
 
         Args:
-            log: Log object to record progress and errors to.
-            chrome_path: Path pointing to the chrome directory to be used for the Scraper.
-            chromedriver_path: Path pointing to the chromedriver directory to be used for the Scraper.
-            calnet_user: User for Calnet login/authorization.
-            host: Hostname of the database.
-            dbname: Name of the database.
-            user: Username for the database.
-            password: Password for the database.
-            port: Port for the database.
-            process_id: Unique process id for this database connection (for parallel processing).
-            headless: Whether to run the scraper's webdriver in headless or headful mode.
+            log: Log object to record progress and errors to
+            chrome_path: Path pointing to the chrome directory to be used for the Scraper
+            chromedriver_path: Path pointing to the chromedriver directory to be used for the Scraper
+            calnet_user: User for Calnet login/authorization
+            host: Hostname of the database
+            dbname: Name of the database
+            user: Username for the database
+            password: Password for the database
+            port: Port for the database
+            process_id: Unique process id for this database connection (for parallel processing)
+            headless: True to run the scraper's webdriver in headless mode
         """
         self.scraper = Scraper(chrome_path=chrome_path, chromedriver_path=chromedriver_path, user=calnet_user,
                                process_id=process_id, headless=headless)
@@ -67,7 +67,6 @@ class MaintenanceDatabase:
             )
             """)
 
-    # TODO: change "TEXT" to proper types
     def initialize_orders_table(self) -> None:
         """Create database table for work orders if none exists yet."""
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS orders (
@@ -100,7 +99,7 @@ class MaintenanceDatabase:
         """Scrape and insert a work request into the database.
 
         Args:
-            request_id: id of the work request.
+            request_id: id of the work request
         """
         try:
             # Skip this request if an entry with the same id already exists
@@ -114,8 +113,8 @@ class MaintenanceDatabase:
             request = self.scraper.scrape_request(request_id)
 
             # Filter out all null values and their corresponding columns
-            columns = [c for c in self.all_columns_requests if getattr(request, c)]
-            values = [str(getattr(request, c)).replace("'", "") for c in columns]
+            columns = [c for c in self.all_columns_requests if getattr(request, c)]  # Remove missing attributes from request
+            values = [str(getattr(request, c)).replace("'", "") for c in columns]  # "'" causes SQL query errors
             columns = ', '.join(columns)
             values = ', '.join([f"'{v}'" for v in values])
             insert_query = f"INSERT INTO requests ({columns}) VALUES ({values});"
@@ -128,10 +127,10 @@ class MaintenanceDatabase:
             self.log.add_quiet(f"{traceback.format_exc()}\n")
 
     def add_requests(self, request_ids: Iterable[int]) -> None:
-        """Scrape and insert work requests for an iterable of request ids.
+        """Scrape and insert work requests to database (for an iterable of request ids).
 
         Args:
-            request_ids: Iterable of request ids.
+            request_ids: Iterable of request ids to scrape and insert
         """
         for request_id in request_ids:
             self.add_request(request_id)
@@ -150,7 +149,7 @@ class MaintenanceDatabase:
         """Scrape and insert a work order into the database.
 
         Args:
-            order_number: Order number of the order.
+            order_number: The order number of the order.
         """
         try:
             # Skip this request if an entry with the same id already exists
@@ -165,8 +164,8 @@ class MaintenanceDatabase:
             order = self.scraper.scrape_order(order_number)
 
             # Filter out all null values and their corresponding columns
-            columns = [c for c in self.all_columns_orders if getattr(order, c)]
-            values = [str(getattr(order, c)).replace("'", "") for c in columns]
+            columns = [c for c in self.all_columns_orders if getattr(order, c)]  # Remove missing attributes from request
+            values = [str(getattr(order, c)).replace("'", "") for c in columns]  # "'" causes SQL query errors
             columns = ', '.join(columns)
             values = ', '.join([f"'{v}'" for v in values])
             insert_query = f"INSERT INTO orders ({columns}) VALUES ({values});"
