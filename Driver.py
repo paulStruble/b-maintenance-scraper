@@ -1,3 +1,6 @@
+import PackageInstaller
+PackageInstaller.check_and_install_dependencies()  # Install package dependencies
+
 import multiprocessing
 from collections import defaultdict
 from MaintenanceDatabase import MaintenanceDatabase

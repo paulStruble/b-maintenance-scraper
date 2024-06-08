@@ -1,5 +1,4 @@
 import shutil
-import subprocess
 import zipfile
 from pathlib import Path
 import requests
@@ -14,29 +13,6 @@ class SetupUtils:
     _last_known_good_versions_with_downloads = "last-known-good-versions-with-downloads.json"
     _known_good_versions_with_downloads = "known-good-versions-with-downloads.json"
     _browser_path = Path.cwd() / 'Browser'
-
-    @staticmethod
-    def install_required_packages(path='requirements.txt') -> None:
-        """ Automatically install all required packages from the specified requirements file.
-
-        Args:
-            path: path to requirements.txt file (optional)
-        """
-        print(f'\nInstalling required packages from {path}:\n')
-        try:
-            # Open requirements file
-            with open(path, 'r') as requirements_file:
-                # Read list of required packages.
-                packages = requirements_file.read().splitlines()
-
-            # Iterate over each package and install it
-            for package in packages:
-                print(f"Installing [{package}] ...")
-                subprocess.check_call([sys.executable, "-m", "pip", "install", package])  # Install
-                print(f"[{package}] installation complete")
-            print("All packages installed successfully.")
-        except Exception as e:
-            print(f"An error occurred while trying to install packages: {e}")
 
     @staticmethod
     def get_platform() -> str:
@@ -256,10 +232,7 @@ class SetupUtils:
         Args:
             config: Config object to edit/update as settings are changed
         """
-        # Stage 1: Install Python package dependencies from requirements.txt
-        SetupUtils.install_required_packages()
-
-        # Stage 2: Install Chrome and chromedriver
+        # Stage 1: Install Chrome and chromedriver
         installed_version = SetupUtils.browser_install_prompt()
         user_platform = SetupUtils.get_platform()
         # Write version number and platform to config
@@ -269,7 +242,7 @@ class SetupUtils:
         else:
             config.reload()  # Need to reload config if a manual update was made to s_chrome_version
 
-        # Stage 3: Postgres Setup
+        # Stage 2: Postgres Setup
         print()
         print("Please set up and connect a Postgres database as explained in the readme before moving forward.\n"
               "Once you have set up and connected your Postgres database, input \"COMPLETE\" below to continue:\n")
