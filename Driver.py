@@ -25,7 +25,10 @@ class Driver:
             SetupUtils.first_time_setup(self.config)
 
         self.password_input_hidden = self.config.get("Options", "b_password_inputs_hidden")
+
+        print("\nCALNET LOGIN\n")
         self.user = login_prompt(hidden=self.password_input_hidden)  # Log into the user's Calnet profile
+        Menu.clear_lines(3)
 
         self.database = self.connect_primary_database()
 
