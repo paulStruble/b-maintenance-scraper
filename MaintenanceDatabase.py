@@ -50,7 +50,7 @@ class MaintenanceDatabase:
 
     def initialize_requests_table(self) -> None:
         """Create database table for work requests if none exists yet."""
-        self.cursor.execute("""CREATE TABLE IF NOT EXISTS requests (
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS request (
             id INT,
             room VARCHAR(20),
             status VARCHAR(20),
@@ -69,7 +69,7 @@ class MaintenanceDatabase:
 
     def initialize_orders_table(self) -> None:
         """Create database table for work orders if none exists yet."""
-        self.cursor.execute("""CREATE TABLE IF NOT EXISTS orders (
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS "order" (
             order_number VARCHAR(15),
             facility VARCHAR(50),
             building VARCHAR(50),
@@ -103,7 +103,7 @@ class MaintenanceDatabase:
         """
         try:
             # Skip this request if an entry with the same id already exists
-            select_query = f"SELECT 1 FROM requests WHERE id = {request_id}"
+            select_query = f"SELECT 1 FROM request WHERE id = {request_id}"
             self.cursor.execute(select_query)
             if self.cursor.fetchone():
                 self.log.add(f"entry with id [{request_id}] already exists ... skipping this insert request")
@@ -117,7 +117,7 @@ class MaintenanceDatabase:
             values = [str(getattr(request, c)).replace("'", "") for c in columns]  # "'" causes SQL query errors
             columns = ', '.join(columns)
             values = ', '.join([f"'{v}'" for v in values])
-            insert_query = f"INSERT INTO requests ({columns}) VALUES ({values});"
+            insert_query = f"INSERT INTO request ({columns}) VALUES ({values});"
 
             self.cursor.execute(insert_query)
             self.connection.commit()
@@ -153,7 +153,7 @@ class MaintenanceDatabase:
         """
         try:
             # Skip this request if an entry with the same id already exists
-            select_query = f"SELECT 1 FROM orders WHERE order_number = '{order_number}'"
+            select_query = f"SELECT 1 FROM \"order\" WHERE order_number = '{order_number}'"
             self.cursor.execute(select_query)
             if self.cursor.fetchone():
                 self.log.add(f"entry with order number [{order_number}] already exists ... skipping this insert "
@@ -168,7 +168,7 @@ class MaintenanceDatabase:
             values = [str(getattr(order, c)).replace("'", "") for c in columns]  # "'" causes SQL query errors
             columns = ', '.join(columns)
             values = ', '.join([f"'{v}'" for v in values])
-            insert_query = f"INSERT INTO orders ({columns}) VALUES ({values});"
+            insert_query = f"INSERT INTO \"order\" ({columns}) VALUES ({values});"
 
             self.cursor.execute(insert_query)
             self.connection.commit()
