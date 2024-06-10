@@ -92,7 +92,12 @@ class Driver:
             stop = max(start, stop)
 
         num_processes = self.config.get("Scraper", "i_parallel_process_count")  # Parallel process count
-        num_processes = max(1, num_processes)  # Ensure at least 1 process
+        while num_processes < 1:  # Ensure at least 1 (also used for first-time run)
+            try:
+                num_processes = int(Menu.input_prompt("Number of parallel processes to use: "))
+            except ValueError:  # Ensure integer input
+                pass
+        self.config.set("Scraper", "i_parallel_process_count", str(num_processes), save=True)  # Update config
 
         print(f"Initializing process: scrape and write orders from ids [{prefix}{start}] to [{prefix}{stop}] on "
               f"[{num_processes}] processes")
