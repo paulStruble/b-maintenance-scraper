@@ -1,3 +1,4 @@
+import os
 import shutil
 import zipfile
 from pathlib import Path
@@ -13,6 +14,7 @@ class SetupUtils:
     _last_known_good_versions_with_downloads = "last-known-good-versions-with-downloads.json"
     _known_good_versions_with_downloads = "known-good-versions-with-downloads.json"
     _browser_path = Path.cwd() / 'Browser'
+    _profiles_path = Path.cwd() / 'Profiles'
 
     @staticmethod
     def get_platform() -> str:
@@ -232,15 +234,9 @@ class SetupUtils:
         Args:
             config: Config object to edit/update as settings are changed
         """
-        # Stage 1: Install Chrome and chromedriver
-        installed_version = SetupUtils.browser_install_prompt()
-        user_platform = SetupUtils.get_platform()
-        # Write version number and platform to config
-        if installed_version is not None:
-            config.set('Scraper', 's_chrome_version', installed_version, save=True)
-            config.set('Scraper', 's_chrome_platform', user_platform, save=True)
-        else:
-            config.reload()  # Need to reload config if a manual update was made to s_chrome_version
+        # Stage 1: Directory Creation
+        os.makedirs(SetupUtils._browser_path)  # Make .\Browser\ directory if it doesn't already exist
+        os.makedirs(SetupUtils._profiles_path)  # Make .\Profiles\ directory if it doesn't already exist
 
         # Stage 2: Postgres Setup
         print()
@@ -255,6 +251,16 @@ class SetupUtils:
 
         config.set('Program-Variables', 'b_first_time_setup_complete', 'true', save=True)
         Menu.clear_lines(4)
+
+        # Stage 3: Install Chrome and chromedriver
+        installed_version = SetupUtils.browser_install_prompt()
+        user_platform = SetupUtils.get_platform()
+        # Write version number and platform to config
+        if installed_version is not None:
+            config.set('Scraper', 's_chrome_version', installed_version, save=True)
+            config.set('Scraper', 's_chrome_platform', user_platform, save=True)
+        else:
+            config.reload()  # Need to reload config if a manual update was made to s_chrome_version
 
 
 if __name__ == '__main__':
