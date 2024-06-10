@@ -115,7 +115,7 @@ class Driver:
         print(f"Finished scraping requests from ids [{prefix}{start}] to [{prefix}{stop}]")
 
     @staticmethod
-    def add_item_range_parallel_helper(item_type: str, item_ids: list, prefix: str, log: Log, chrome_path: Path,
+    def add_item_range_parallel_helper(item_type: str, item_ids: list, log: Log, chrome_path: Path,
                                        chromedriver_path: Path, calnet_user: User, process_id: int, headless: bool,
                                        db_args: tuple) -> None:
         """Initialize and run a single process for scraping work order requests and adding them to a database.
@@ -126,7 +126,6 @@ class Driver:
         Args:
             item_type: Type of item to be scraped (either 'request' or 'order')
             item_ids: List of work order item ids to be scraped/added by this process
-            prefix: Prefix to append to work order numbers ("" for requests)
             log: Log object for recording progress and error messages
             chrome_path: Path pointing to the chrome directory to be used for Scrapers
             chromedriver_path: Path pointing to the chromedriver directory to be used for Scrapers
@@ -182,7 +181,7 @@ class Driver:
         args = []
         for process_id in range(num_processes):
             item_ids = id_dict[process_id]
-            args.append((item_type, item_ids, prefix, log, chrome_path, chromedriver_path, calnet_user,
+            args.append((item_type, item_ids, log, chrome_path, chromedriver_path, calnet_user,
                          process_id + 1, headless, db_args))  # Process 0 is reserved for the primary (driver) database
 
         # Main scraper needs to be closed to allow for its Chrome profile to be cloned for each parallel process
