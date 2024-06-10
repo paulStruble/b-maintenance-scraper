@@ -203,7 +203,7 @@ class SetupUtils:
                    "Dev",
                    "Canary",
                    "Specific Version",
-                   "Manual Installation (see readme for instructions)"]
+                   "Manual Installation (see readme Section 2.5 for instructions)"]
 
         title = ("Setup/Install for Chrome and chromedriver:\n"
                  "If a channel is selected, the latest version for the selected channel will be installed.\n"
@@ -220,7 +220,7 @@ class SetupUtils:
             case 5:
                 # Manual Installation
                 print()  # Cosmetic padding
-                print("To manually install Chrome and chromedriver, please see readme for instructions.\n"
+                print("To manually install Chrome and chromedriver, please see readme section 2.5 for instructions.\n"
                       "Once your manual installation is complete, input \"COMPLETE\" below to continue:\n")
                 user_in = ''
                 while user_in.lower() != 'complete':
@@ -240,7 +240,7 @@ class SetupUtils:
 
         # Stage 2: Postgres Setup
         print()
-        print("Please set up and connect a Postgres database as explained in the readme before moving forward.\n"
+        print("Please set up and connect a PostgreSQL database as explained in readme Section 2.2 before moving forward.\n"
               "Once you have set up and connected your Postgres database, input \"COMPLETE\" below to continue:\n")
         user_in = ''
         database_setup_complete = False  # Ensure b_database_setup_complete is set to 'true' in config
